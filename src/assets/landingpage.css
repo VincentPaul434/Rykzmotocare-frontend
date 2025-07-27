@@ -299,22 +299,15 @@
 }
 
 @media (max-width: 600px) {
-  .header, .nav {
-    padding: 8px 4px;
-  }
-  .logo {
-    font-size: 1.3rem;
-  }
-  .hero-content h1 {
-    font-size: 1.3rem;
-  }
+  /* Styles for mobile phones */
+  .header, .nav { padding: 8px 4px; }
+  .logo { font-size: 1.3rem; }
+  .hero-content h1 { font-size: 1.3rem; }
   .parts-grid img, .cat-item img, .service-item img {
     width: 70px;
     height: 70px;
   }
-  .cat-item {
-    width: 90px;
-  }
+  .cat-item { width: 90px; }
   .service-item {
     width: 95vw;
     min-width: 0;
