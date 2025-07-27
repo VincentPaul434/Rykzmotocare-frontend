@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col md:flex-row min-h-screen bg-gray-100">
+  <div class="flex flex-row min-h-screen bg-gray-100 overflow-x-auto">
     <!-- Sidebar -->
-    <aside class="w-full md:w-60 bg-gray-700 text-white flex flex-col justify-between py-6 px-4">
+    <aside class="w-56 md:w-60 bg-gray-700 text-white flex flex-col justify-between py-6 px-4 flex-shrink-0">
       <div>
         <div class="flex items-center mb-8">
           <img src="https://i.ibb.co/6b7Q8Q8/your-logo.png" alt="Logo" class="w-12 h-12 mr-2" />
@@ -27,7 +27,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-2 md:p-8 bg-white rounded-tr-3xl rounded-br-3xl shadow relative">
+    <main class="flex-1 p-2 md:p-8 bg-white rounded-tr-3xl rounded-br-3xl shadow relative min-w-[320px]">
       <!-- Top Bar -->
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div class="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full">
