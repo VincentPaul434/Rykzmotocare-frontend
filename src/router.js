@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LandingPage from './landingpage.vue'
+import LandingPage from './assets/LandingPage.vue'
 import AdminSignup from './AdminSignup.vue'
 import CustomerAdmin from './CustomerAdmin.vue'
 import InventoryAdmin from './InventoryAdmin.vue'
