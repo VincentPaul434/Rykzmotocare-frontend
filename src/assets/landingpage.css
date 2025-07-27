@@ -262,14 +262,67 @@
     flex-direction: column;
     align-items: flex-start;
     min-height: 250px;
+    padding: 20px 10px 10px 10px;
   }
   .hero-bike {
-    width: 220px;
+    width: 180px;
     margin-top: 20px;
+    max-width: 90vw;
   }
   .parts-grid, .categories-grid, .services-grid {
     flex-direction: column;
     align-items: center;
+    gap: 18px;
+  }
+  .header, .nav {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 10px;
+    gap: 10px;
+  }
+  .header-center, .footer-top, .footer-socials, .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .search-bar {
+    width: 100%;
+    margin-top: 8px;
+  }
+  .footer {
+    padding: 18px 5px 8px 5px;
+  }
+  .modal-content {
+    padding: 1rem;
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 600px) {
+  .header, .nav {
+    padding: 8px 4px;
+  }
+  .logo {
+    font-size: 1.3rem;
+  }
+  .hero-content h1 {
+    font-size: 1.3rem;
+  }
+  .parts-grid img, .cat-item img, .service-item img {
+    width: 70px;
+    height: 70px;
+  }
+  .cat-item {
+    width: 90px;
+  }
+  .service-item {
+    width: 95vw;
+    min-width: 0;
+    padding: 10px 4px;
+  }
+  .modal-content {
+    padding: 0.5rem;
+    max-width: 99vw;
   }
 }
 
