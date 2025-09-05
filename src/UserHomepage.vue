@@ -120,7 +120,7 @@
           At Rykzmotocare we make servicing your bike easy, so you are ready for your next ride.<br>
           Get easy access to service and maintenance information, request service online when it is convenient for you and trust that your Rykzmotocare has trained technicians to meet your needs.
         </p>
-        <button class="bg-yellow-400 text-black font-bold px-6 py-2 rounded mt-5">BOOK REPAIR SERVICE</button>
+        <button class="bg-yellow-400 text-black font-bold px-6 py-2 rounded mt-5">BOOK REPAIR SERVICE</button> 
       </div>
       <img class="w-80 mt-8 md:mt-0" src="https://i.ibb.co/6b7Q8Q8/bike.png" alt="Service Bike" />
     </section>
@@ -142,7 +142,6 @@
       </div>
       <div class="flex flex-col md:flex-row items-center justify-between bg-gray-900 py-4 px-8 mt-8">
         <span class="text-2xl font-bold"><span class="text-yellow-400">Rykz</span>motocare</span>
-        <button class="bg-yellow-400 text-black font-bold px-4 py-2 rounded my-2 md:my-0">DUNLOP BEST TIRES</button>
         <div class="flex gap-4 text-yellow-400 text-2xl">
           <i class="fa fa-facebook"></i>
           <i class="fa fa-instagram"></i>

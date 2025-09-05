@@ -34,7 +34,6 @@
           <p class="text-sm text-center mb-1">{{ item.brand }}</p>
           <p class="text-sm text-center mb-1">Stock: {{ item.quantity }}</p>
           <p class="text-green-600 font-bold mb-2">PHP{{ item.price }}</p>
-          <button class="bg-yellow-400 text-black font-bold px-4 py-2 rounded w-full">Add to Cart</button>
         </div>
       </div>
     </section>

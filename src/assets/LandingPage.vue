@@ -7,7 +7,7 @@
       </div>
       <div class="header-center">
         <button class="shop-btn">
-          <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
+          <i class="fa fa-shopping-cart"></i> BROWSE YOUR PARTS
         </button>
         <input class="search-bar" type="text" placeholder="Search..." />
       </div>
@@ -122,7 +122,6 @@
         <div class="footer-logo">
           <span class="logo"><span class="logo-bold">Rykz</span>motocare</span>
         </div>
-        <button class="dunlop-btn">DUNLOP BEST TIRES</button>
         <div class="footer-socials">
           <i class="fa fa-facebook"></i>
           <i class="fa fa-instagram"></i>
