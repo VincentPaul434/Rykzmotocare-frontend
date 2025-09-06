@@ -24,7 +24,16 @@
       <span class="sale">SALE</span>
     </nav>
     <!-- Hero Section -->
-    <section class="hero">
+    <section
+      class="hero"
+      style="
+        background:
+          linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)),
+          url('https://www.cyclenews.com/wp-content/uploads/2019/10/20-Years-of-the-Suzuki-Hayabusa.jpg') center center/cover no-repeat,
+          #000;
+        position: relative;
+      "
+    >
       <div class="hero-content">
         <h1>High-Performance <br /><span class="highlight">Motor Parts</span></h1>
         <p>Everything you need for your ride. Engineered to perform.</p>
