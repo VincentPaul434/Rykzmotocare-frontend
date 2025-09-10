@@ -17,11 +17,10 @@
     </header>
     <!-- Navigation -->
     <nav class="nav">
-      <button class="menu-btn"><i class="fa fa-bars"></i> MENU</button>
-      <span>PARTS</span>
-      <span>ACCESSORIES</span>
-      <span>SERVICES</span>
-      <span class="sale">SALE</span>
+  <span @click="requireLogin" style="cursor:pointer;">PARTS</span>
+  <span @click="requireLogin" style="cursor:pointer;">ACCESSORIES</span>
+  <span @click="requireLogin" style="cursor:pointer;">SERVICES</span>
+  <span class="sale" @click="requireLogin" style="cursor:pointer;">SALE</span>
     </nav>
     <!-- Hero Section -->
     <section
@@ -289,6 +288,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+
 const showLogin = ref(false)
 const showCreate = ref(false)
 const email = ref('')
@@ -302,6 +302,12 @@ const registerPassword = ref('')
 const registerConfirm = ref('')
 const registerError = ref('')
 const router = useRouter()
+
+function requireLogin() {
+  if (!localStorage.getItem('token')) {
+    showLogin.value = true
+  }
+}
 
 const handleLogin = async () => {
   error.value = ''
