@@ -32,7 +32,9 @@ function handleLogout() {
         <span class="hidden md:inline text-yellow-400 font-bold cursor-pointer">HOME</span>
         <button class="md:hidden text-xl"><i class="fa fa-bars"></i> MENU</button>
         <router-link to="/parts" class="hidden md:inline cursor-pointer">PARTS</router-link>
-        <router-link to ="/accessories" class="hidden md:inline cursor-pointer">ACCESSORIES</router-link>
+        <router-link to="/oil" class="hidden md:inline cursor-pointer">OIL</router-link>
+        <router-link to="/tires" class="hidden md:inline cursor-pointer">TIRES</router-link>
+        <router-link to="/accessories" class="hidden md:inline cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="hidden md:inline cursor-pointer">SERVICES</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>

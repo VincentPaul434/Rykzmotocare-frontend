@@ -330,24 +330,35 @@ const handleLogin = async () => {
       error.value = data.message || 'Login failed'
       return
     }
-    // Store token and admin_id if logging in as admin (id number)
+
     if (!isEmail) {
       // Admin login
       localStorage.setItem('admin_id', data.admin_id)
       localStorage.setItem('token', data.token)
       localStorage.removeItem('user_id')
       localStorage.removeItem('name')
+      showLogin.value = false
+      router.push('/customer-admin')
     } else {
-      // Customer login
+      // User login
       localStorage.setItem('token', data.token)
-      // After successful login as customer
       localStorage.setItem('user_id', data.user_id)
       localStorage.setItem('name', data.name)
       localStorage.removeItem('admin_id')
-    }
-    // Redirect based on approval status for customers
-    showLogin.value = false
-    if (isEmail) {
+      showLogin.value = false
+
+      try {
+        const shopRes = await fetch('http://localhost:5000/api/shop')
+        const shopData = await shopRes.json()
+        if (shopData.status === 'closed') {
+          router.push('/close-shop')
+          return
+        }
+      } catch (e) {
+        // Optional: handle error or fallback
+      }
+
+      // Then route normally
       if (data.status === 'approved') {
         router.push('/user-homepage')
       } else if (data.status === 'pending') {
@@ -355,8 +366,6 @@ const handleLogin = async () => {
       } else {
         error.value = 'Unknown account status'
       }
-    } else {
-      router.push('/customer-admin')
     }
   } catch (e) {
     error.value = 'Network error'

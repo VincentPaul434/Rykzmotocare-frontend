@@ -12,6 +12,7 @@
         <router-link to="/user-homepage" class="cursor-pointer">HOME</router-link>
         <router-link to="/parts" class="cursor-pointer">PARTS</router-link>
         <router-link to="/oil" class="text-yellow-400 font-bold cursor-pointer">OIL</router-link>
+        <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>

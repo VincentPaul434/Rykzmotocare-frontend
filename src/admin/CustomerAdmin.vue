@@ -10,7 +10,12 @@
           </span>
         </div>
         <nav class="space-y-2">
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
+          <!-- Update this link to trigger shop close -->
+          <a
+            href="#"
+            @click.prevent="handleCloseShop"
+            class="block py-1 px-2 rounded hover:bg-gray-600"
+          >Close Shop</a>
           <a href="#" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Customer</a>
           <router-link to="/inventory-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Inventory</router-link>
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
@@ -80,8 +85,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const customers = ref([])
+const router = useRouter()
 
 async function fetchApprovedCustomers() {
   try {
@@ -99,5 +106,24 @@ onMounted(fetchApprovedCustomers)
 function handleLogout() {
   localStorage.removeItem('token'); 
   window.location.href = '/';  
+}
+
+// Function to close shop and redirect
+async function handleCloseShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' })
+    })
+    const data = await res.json()
+    if (data.success) {
+      router.push('/close-shop')
+    } else {
+      alert('Failed to close shop.')
+    }
+  } catch (err) {
+    alert('Error closing shop.')
+  }
 }
 </script>

@@ -45,12 +45,29 @@
             <td class="border px-4 py-2">{{ booking.service_requested }}</td>
             <td class="border px-4 py-2">{{ booking.book_status }}</td>
             <td class="border px-4 py-2">
-              <button class="text-blue-600 mr-2" @click="updateBooking(idx)">Update</button>|
+              <button class="text-blue-600 mr-2" @click="openModal(idx)">Update</button>|
               <button class="text-green-600 ml-2" @click="notifyBooking(idx)">Notify</button>
             </td>
           </tr>
         </tbody>
       </table>
+      <!-- Vehicle Progress Modal -->
+      <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-gray-200 rounded-lg p-6 relative w-80">
+          <button @click="closeModal" class="absolute top-2 right-2 text-xl font-bold text-gray-700">&times;</button>
+          <h3 class="text-lg font-semibold mb-4 text-center">Vehicle Progress:</h3>
+          <!-- Replace the checkboxes with radio buttons for single selection -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <label><input type="radio" name="status" value="confirmed" v-model="selectedStatus" /> Confirmed</label>
+            <label><input type="radio" name="status" value="completed" v-model="selectedStatus" /> Completed</label>
+            <label><input type="radio" name="status" value="pending" v-model="selectedStatus" /> Pending</label>
+            <label><input type="radio" name="status" value="declined" v-model="selectedStatus" /> Declined</label>
+            <label><input type="radio" name="status" value="inProgress" v-model="selectedStatus" /> In progress</label>
+            <label><input type="radio" name="status" value="waitingParts" v-model="selectedStatus" /> Waiting for Parts</label>
+          </div>
+          <button @click="saveChanges" class="block mx-auto bg-white border px-4 py-1 rounded hover:bg-gray-300">Save Changes</button>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -59,6 +76,17 @@
 import { ref, onMounted } from 'vue'
 
 const bookings = ref([])
+const showModal = ref(false)
+const selectedBookingIdx = ref(null)
+const modalStatus = ref({
+  confirmed: false,
+  completed: false,
+  pending: false,
+  declined: false,
+  inProgress: false,
+  waitingParts: false,
+})
+const selectedStatus = ref('')
 
 onMounted(async () => {
   try {
@@ -71,8 +99,54 @@ onMounted(async () => {
   }
 })
 
-function updateBooking(idx) {
-  alert('Update booking feature not implemented.')
+function openModal(idx) {
+  selectedBookingIdx.value = idx
+  const statusMap = {
+    Confirmed: 'confirmed',
+    Completed: 'completed',
+    Pending: 'pending',
+    Declined: 'declined',
+    'In progress': 'inProgress',
+    'Waiting for Parts': 'waitingParts',
+  }
+  selectedStatus.value = statusMap[bookings.value[idx].book_status] || ''
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+async function saveChanges() {
+  const statusMap = {
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    pending: 'Pending',
+    declined: 'Declined',
+    inProgress: 'In progress',
+    waitingParts: 'Waiting for Parts',
+  }
+  if (selectedStatus.value) {
+    const booking = bookings.value[selectedBookingIdx.value]
+    const newStatus = statusMap[selectedStatus.value]
+    booking.book_status = newStatus
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/bookings/${booking.booking_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_status: newStatus }),
+      })
+      if (!res.ok) throw new Error('Failed to update booking status')
+      alert('Booking status updated!')
+    } catch (err) {
+      alert('Could not update booking status.')
+      console.error(err)
+    }
+  } else {
+    alert('Please select a status.')
+  }
+  closeModal()
 }
 
 function notifyBooking(idx) {

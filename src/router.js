@@ -14,6 +14,7 @@ import Accessories from './customer/Accessories.vue'
 import CustomerParts from './customer/Parts.vue'
 import Oil from './customer/Oil.vue'
 import Tires from './customer/Tires.vue'
+import closeShop from './admin/closeShop.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -30,14 +31,15 @@ const routes = [
   { path: '/accessories', name: 'Accessories', component: Accessories },
   { path: '/parts', name: 'CustomerParts', component: CustomerParts },
   { path: '/oil', name: 'Oil', component: Oil },
-  { path: '/tires', name: 'Tires', component: Tires }
-
+  { path: '/tires', name: 'Tires', component: Tires },
+  { path: '/close-shop', name: 'closeShop', component: closeShop }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
+
 
 // Navigation guard for token-protected routes
 router.beforeEach((to, from, next) => {
