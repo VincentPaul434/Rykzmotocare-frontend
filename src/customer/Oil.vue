@@ -4,7 +4,6 @@
       <div class="flex items-center gap-2 text-2xl font-bold">
         <span>
           <span class="text-yellow-400">Rykz</span>
-          <img src="https://placehold.co/32x32?text=O" alt="O Logo" class="inline-block h-8 mx-1 rounded-full bg-white align-middle" />
           motocare
         </span>
       </div>

@@ -17,10 +17,10 @@
     </header>
     <!-- Navigation -->
     <nav class="nav">
-  <span @click="requireLogin" style="cursor:pointer;">PARTS</span>
-  <span @click="requireLogin" style="cursor:pointer;">ACCESSORIES</span>
-  <span @click="requireLogin" style="cursor:pointer;">SERVICES</span>
-  <span class="sale" @click="requireLogin" style="cursor:pointer;">SALE</span>
+  <span @click="requireLogin('/parts')" style="cursor:pointer;">PARTS</span>
+  <span @click="requireLogin('/accessories')" style="cursor:pointer;">ACCESSORIES</span>
+  <span @click="requireLogin('/services')" style="cursor:pointer;">SERVICES</span>
+  <span class="sale" @click="requireLogin('/sale')" style="cursor:pointer;">SALE</span>
     </nav>
     <!-- Hero Section -->
     <section
@@ -122,7 +122,12 @@
         At Rykzmotocare we make servicing your bike easy, so you are ready for your next ride.<br>
         Get easy access to service and maintenance information, request service online when it is convenient for you and trust that your Rykzmotocare has trained technicians to meet your needs.
       </p>
-      <button class="repair-btn">BOOK REPAIR SERVICE</button>
+      <button
+        class="repair-btn"
+        @click="requireLogin('/services')"  
+      >
+        BOOK REPAIR SERVICE
+      </button>
     </section>
     <!-- Footer -->
     <footer class="footer">
@@ -261,12 +266,6 @@
               </span>
             </div>
             <div v-if="registerError" style="color:#e53e3e;font-size:0.95rem;margin-bottom:0.5rem;">{{ registerError }}</div>
-            <div class="modal-checkbox-row" style="margin-bottom:1.5rem;">
-              <input type="checkbox" id="terms" required class="modal-checkbox" />
-              <label for="terms" class="modal-checkbox-label" style="font-size:0.97rem;">
-                Accept <a href="#" style="color:#ffc107;text-decoration:underline;">Terms and Conditions</a> and <a href="#" style="color:#ffc107;text-decoration:underline;">Privacy Policy</a>.
-              </label>
-            </div>
             <button type="submit" style="font-family:inherit;font-size:1.1rem;font-weight:bold;letter-spacing:1px;">CREATE ACCOUNT</button>
           </form>
           <div style="font-size:0.85rem;margin-top:0.5rem;color:#666;">
@@ -303,9 +302,13 @@ const registerConfirm = ref('')
 const registerError = ref('')
 const router = useRouter()
 
-function requireLogin() {
+function requireLogin(targetRoute = null) {
   if (!localStorage.getItem('token')) {
     showLogin.value = true
+    return
+  }
+  if (targetRoute) {
+    router.push(targetRoute)
   }
 }
 
