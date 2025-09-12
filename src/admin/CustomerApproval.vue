@@ -68,7 +68,7 @@
               <td class="py-2 px-4">
                 <button class="text-gray-800 hover:text-green-600 text-sm font-semibold mr-2" @click="approveCustomer(customer.user_id)">Approve</button>
                 <span>|</span>
-                <button class="text-gray-800 hover:text-red-600 text-sm font-semibold ml-2">Reject</button>
+                <button class="text-gray-800 hover:text-red-600 text-sm font-semibold ml-2" @click="rejectCustomer(customer.user_id)">Reject</button>
               </td>
             </tr>
           </tbody>
@@ -86,7 +86,7 @@ const customers = ref([])
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:5000/api/users/customers')
+    const res = await fetch('http://localhost:5000/api/customers')
     if (!res.ok) throw new Error('Failed to fetch')
     const allCustomers = await res.json()
     console.log(allCustomers) // <-- Add this line
@@ -115,6 +115,20 @@ async function approveCustomer(user_id) {
     customers.value = customers.value.filter(c => c.user_id !== user_id)
   } catch (e) {
     alert('Failed to approve customer')
+  }
+}
+
+async function rejectCustomer(user_id) {
+  if (!confirm('Are you sure you want to reject this customer?')) return;
+  try {
+    const res = await fetch(`http://localhost:5000/api/customers/${user_id}/reject`, {
+      method: 'PATCH', // Assuming PATCH for reject
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) throw new Error('Failed to reject');
+    customers.value = customers.value.filter(c => c.user_id !== user_id);
+  } catch (e) {
+    alert('Failed to reject customer');
   }
 }
 
