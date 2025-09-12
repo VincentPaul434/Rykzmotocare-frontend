@@ -15,6 +15,8 @@ import CustomerParts from './customer/Parts.vue'
 import Oil from './customer/Oil.vue'
 import Tires from './customer/Tires.vue'
 import closeShop from './admin/closeShop.vue'
+import FeedbackAdmin from './admin/FeedbackAdmin.vue'
+import customerCloseShop from './customer/customerCloseShop.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -32,7 +34,9 @@ const routes = [
   { path: '/parts', name: 'CustomerParts', component: CustomerParts },
   { path: '/oil', name: 'Oil', component: Oil },
   { path: '/tires', name: 'Tires', component: Tires },
-  { path: '/close-shop', name: 'closeShop', component: closeShop }
+  { path: '/close-shop', name: 'closeShop', component: closeShop },
+  { path: '/feedback-admin', name: 'FeedbackAdmin', component: FeedbackAdmin },
+  { path: '/customer-close-shop', name: 'customerCloseShop', component: customerCloseShop }
 ]
 
 const router = createRouter({
@@ -61,7 +65,8 @@ router.beforeEach((to, from, next) => {
     '/mechanic-admin',
     '/pending-approval',
     '/booking-list',
-    '/customer-bills'
+    '/customer-bills',
+    '/feedback-admin'
   ]
 
   if (protectedRoutes.some(path => to.path.startsWith(path))) {

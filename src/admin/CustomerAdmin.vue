@@ -161,7 +161,7 @@ const saving = ref(false)
 
 async function fetchApprovedCustomers() {
   try {
-    const res = await fetch('http://localhost:5000/api/users/customers')
+    const res = await fetch('http://localhost:5000/api/customers')
     const data = await res.json()
     customers.value = Array.isArray(data)
       ? data.filter(c => c.status === 'approved')
@@ -206,7 +206,7 @@ async function saveEdit() {
   saving.value = true
   editError.value = ''
   try {
-    const res = await fetch(`http://localhost:5000/api/users/${editingId.value}`, {
+    const res = await fetch(`http://localhost:5000/api/customers/${editingId.value}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm.value)
@@ -217,11 +217,8 @@ async function saveEdit() {
       saving.value = false
       return
     }
-    // Update local list
     const idx = customers.value.findIndex(c => c.user_id === editingId.value)
-    if (idx !== -1) {
-      customers.value[idx] = { ...customers.value[idx], ...editForm.value }
-    }
+    if (idx !== -1) customers.value[idx] = { ...customers.value[idx], ...editForm.value }
     closeEdit()
   } catch {
     editError.value = 'Network error'
@@ -233,11 +230,12 @@ async function saveEdit() {
 async function deleteCustomer(id) {
   if (!confirm('Delete this customer?')) return
   try {
-    const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+    const res = await fetch(`http://localhost:5000/api/customers/${id}`, {
       method: 'DELETE'
     })
     if (!res.ok) {
-      alert('Delete failed')
+      const t = await res.text().catch(() => '')
+      alert(`Delete failed${t ? `: ${t}` : ''}`)
       return
     }
     customers.value = customers.value.filter(c => c.user_id !== id)
@@ -259,12 +257,12 @@ async function handleCloseShop() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'closed' })
     })
-    const data = await res.json()
-    if (data.success) {
-      router.push('/close-shop')
-    } else {
-      alert('Failed to close shop.')
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success !== true) {
+      alert(data.error || 'Failed to close shop.')
+      return
     }
+    router.push('/close-shop')
   } catch {
     alert('Error closing shop.')
   }

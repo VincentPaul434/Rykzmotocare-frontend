@@ -302,7 +302,26 @@ const registerConfirm = ref('')
 const registerError = ref('')
 const router = useRouter()
 
-function requireLogin(targetRoute = null) {
+const shopClosed = ref(false)
+
+async function checkShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      headers: { 'Accept': 'application/json' }
+    })
+    const data = await res.json().catch(() => ({}))
+    shopClosed.value = data.status === 'closed'
+  } catch {
+    shopClosed.value = false
+  }
+}
+
+async function requireLogin(targetRoute = null) {
+  await checkShop()
+  if (shopClosed.value) {
+    router.push('/customer-close-shop')
+    return
+  }
   if (!localStorage.getItem('token')) {
     showLogin.value = true
     return
@@ -354,7 +373,7 @@ const handleLogin = async () => {
         const shopRes = await fetch('http://localhost:5000/api/shop')
         const shopData = await shopRes.json()
         if (shopData.status === 'closed') {
-          router.push('/close-shop')
+          router.push('/customer-close-shop')
           return
         }
       } catch (e) {
