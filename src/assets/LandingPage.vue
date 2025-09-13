@@ -280,6 +280,28 @@
           </div>
         </div>
       </div>
+      <!-- Toast Notification -->
+      <div v-if="toast.show" class="fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+        <transition name="toast-pop">
+          <div
+            v-show="toast.show"
+            class="relative w-[90%] max-w-sm mx-auto bg-white rounded-2xl shadow-2xl ring-1 ring-green-200 p-5 text-green-800 pointer-events-auto"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="flex items-center gap-3">
+              <div class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                <i class="fa fa-check"></i>
+              </div>
+              <div>
+                <div class="text-base font-semibold mb-1">Registration Successful</div>
+                <div class="text-sm opacity-90">Account created successfully.</div>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
       </div>
 </template>
 
@@ -303,6 +325,13 @@ const registerError = ref('')
 const router = useRouter()
 
 const shopClosed = ref(false)
+const toast = ref({ show: false })
+let toastTimer = null
+function showToast(message = 'created account successfully.', duration = 1800) {
+  toast.value = { show: true, message }
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => (toast.value.show = false), duration)
+}
 
 async function checkShop() {
   try {
@@ -334,7 +363,6 @@ async function requireLogin(targetRoute = null) {
 const handleLogin = async () => {
   error.value = ''
   try {
-    // Determine if email or id_number is used
     const isEmail = email.value.trim() !== ''
     const payload = {
       identifier: isEmail ? email.value : idNumber.value,
@@ -376,15 +404,15 @@ const handleLogin = async () => {
           router.push('/customer-close-shop')
           return
         }
-      } catch (e) {
-        // Optional: handle error or fallback
-      }
+      } catch (e) {}
 
-      // Then route normally
-      if (data.status === 'approved') {
-        router.push('/user-homepage')
-      } else if (data.status === 'pending') {
+      // Use backend redirect if present
+      if (data.redirect) {
+        router.push(data.redirect)
+      } else if (String(data.status).toLowerCase() === 'pending') {
         router.push('/pending-approval')
+      } else if (String(data.status).toLowerCase() === 'approved') {
+        router.push('/user-homepage')
       } else {
         error.value = 'Unknown account status'
       }
@@ -397,6 +425,16 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   registerError.value = ''
   try {
+    // Basic validation
+    if (!registerName.value || !registerPhone.value || !registerEmail.value || !registerPassword.value || !registerConfirm.value) {
+      registerError.value = 'Please fill out all fields.'
+      return
+    }
+    if (registerPassword.value !== registerConfirm.value) {
+      registerError.value = 'Passwords do not match.'
+      return
+    }
+
     const res = await fetch('http://localhost:5000/api/user/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -412,9 +450,12 @@ const handleRegister = async () => {
       registerError.value = data.message || 'Registration failed'
       return
     }
-    // Auto-login after registration
-    localStorage.setItem('token', data.token)
-    router.push('/pending-approval')
+    // Show designed toast, then route
+    showToast()
+    setTimeout(() => {
+      showCreate.value = false
+      router.push('/pending-approval')
+    }, 1800)
   } catch (e) {
     registerError.value = 'Network error'
   }

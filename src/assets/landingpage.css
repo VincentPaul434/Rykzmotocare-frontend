@@ -323,13 +323,14 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.45);
+  z-index: 40; /* Lower than toast */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .modal-content {
+  z-index: 41; /* Lower than toast */
   background: #fff;
   border-radius: 0.5rem;
   width: 100%;
@@ -432,4 +433,14 @@
   color: #444;
   user-select: none;
   line-height: 1.4;
+}
+
+.toast-pop-enter-active,
+.toast-pop-leave-active {
+  transition: all .18s ease-out;
+}
+.toast-pop-enter-from,
+.toast-pop-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
 }

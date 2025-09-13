@@ -119,6 +119,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const id_number = ref('')
 const password = ref('')
@@ -154,6 +157,75 @@ const handleSignup = async () => {
     error.value = 'Network error occurred'
   } finally {
     loading.value = false
+  }
+}
+
+const email = ref('')
+const showLogin = ref(false)
+
+const handleLogin = async () => {
+  error.value = ''
+  try {
+    const isEmail = email.value.trim() !== ''
+    const payload = {
+      identifier: isEmail ? email.value : idNumber.value,
+      password: password.value,
+      loginAs: isEmail ? 'customer' : 'admin'
+    }
+
+    const res = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      error.value = data.message || 'Login failed'
+      return
+    }
+
+    if (!isEmail) {
+      // Admin login
+      localStorage.setItem('admin_id', data.admin_id)
+      localStorage.setItem('token', data.token)
+      localStorage.removeItem('user_id')
+      localStorage.removeItem('name')
+      showLogin.value = false
+      router.push('/customer-admin')
+    } else {
+      // User login
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user_id', data.user_id)
+      localStorage.setItem('name', data.name)
+      localStorage.removeItem('admin_id')
+      showLogin.value = false
+
+      try {
+        const shopRes = await fetch('http://localhost:5000/api/shop')
+        const shopData = await shopRes.json()
+        if (shopData.status === 'closed') {
+          router.push('/customer-close-shop')
+          return
+        }
+      } catch (e) {}
+
+      // Use backend redirect if present
+      if (data.redirect) {
+        router.push(data.redirect)
+        return
+      }
+      if (String(data.status).toLowerCase() === 'pending') {
+        router.push('/pending-approval')
+        return
+      }
+      if (String(data.status).toLowerCase() === 'approved') {
+        router.push('/user-homepage')
+        return
+      }
+      error.value = 'Unknown account status'
+    }
+  } catch (e) {
+    error.value = 'Network error'
   }
 }
 </script>

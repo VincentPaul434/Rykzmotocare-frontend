@@ -55,7 +55,8 @@ router.beforeEach((to, from, next) => {
     '/services',
     '/oil',
     '/tires',
-    '/user-homepage'
+    '/user-homepage',
+    '/pending-approval',
   ]
   // Admin protected routes
   const adminRoutes = [
@@ -63,7 +64,6 @@ router.beforeEach((to, from, next) => {
     '/inventory-admin',
     '/customer-approval',
     '/mechanic-admin',
-    '/pending-approval',
     '/booking-list',
     '/customer-bills',
     '/feedback-admin'
