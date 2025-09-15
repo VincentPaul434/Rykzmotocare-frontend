@@ -51,7 +51,10 @@
 
       <!-- Table -->
       <div class="overflow-x-auto">
-        <table class="min-w-full border-separate border-spacing-0">
+        <div v-if="loading" class="p-4 text-gray-600">Loading mechanics...</div>
+        <div v-else-if="loadError" class="p-4 text-red-600">{{ loadError }}</div>
+
+        <table v-else class="min-w-full border-separate border-spacing-0">
           <thead>
             <tr class="border-b-2 border-black">
               <th class="text-left py-2 px-4 font-semibold">Mechanic Name:</th>
@@ -63,14 +66,14 @@
           <tbody>
             <tr
               v-for="(mechanic, idx) in filteredMechanics"
-              :key="mechanic.mechanic_id"
+              :key="mechanic.mechanic_id ?? mechanic.id ?? idx"
               :class="idx % 2 === 1 ? 'bg-gray-100' : ''"
               class="border-b border-black"
             >
               <td class="py-2 px-4 font-semibold">{{ mechanic.name }}</td>
               <td class="py-2 px-4">{{ mechanic.specialization }}</td>
               <td class="py-2 px-4 font-semibold">
-                <span :class="mechanic.status === 'Available' ? 'text-black' : 'text-gray-600'">
+                <span :class="(mechanic.status || '').includes('Available') ? 'text-black' : 'text-gray-600'">
                   {{ mechanic.status }}
                 </span>
               </td>
@@ -82,8 +85,14 @@
                 <span>|</span>
                 <button
                   class="text-gray-800 hover:text-red-600 text-sm font-semibold ml-2"
-                  @click="removeMechanic(mechanic.mechanic_id)"
+                  @click="removeMechanic(mechanic.mechanic_id ?? mechanic.id)"
                 >Remove</button>
+              </td>
+            </tr>
+
+            <tr v-if="filteredMechanics.length === 0">
+              <td colspan="4" class="py-6 px-4 text-center text-gray-600">
+                No mechanics found.
               </td>
             </tr>
           </tbody>
@@ -181,94 +190,131 @@ const adminId = localStorage.getItem('admin_id')
 const token = localStorage.getItem('token')
 const isAdmin = !!adminId && !!token
 
-onMounted(() => {
-  if (!isAdmin) {
-    router.replace('/') // Redirect to landing if not logged in as admin
-  } else {
-    fetchMechanics()
-  }
-})
-
 const mechanics = ref([])
+const loading = ref(false)
+const loadError = ref('')
 const search = ref('')
+
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editId = ref(null)
+
 const form = ref({
   name: '',
   specialization: '',
   days_available: '',
   time_available: '',
   status: '',
-  availability: ''
+  availability: '' // keep if your DB expects it; otherwise remove from payload
 })
 
-const filteredMechanics = computed(() =>
-  mechanics.value.filter(m =>
-    m.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    m.specialization.toLowerCase().includes(search.value.toLowerCase())
+const filteredMechanics = computed(() => {
+  const list = Array.isArray(mechanics.value) ? mechanics.value : []
+  const q = (search.value || '').toLowerCase()
+  return list.filter(m =>
+    (m.name || '').toLowerCase().includes(q) ||
+    (m.specialization || '').toLowerCase().includes(q)
   )
-)
+})
 
 async function fetchMechanics() {
-  const res = await fetch('http://localhost:5000/api/mechanics')
-  if (res.ok) {
-    mechanics.value = await res.json()
+  loading.value = true
+  loadError.value = ''
+  try {
+    const res = await fetch('http://localhost:5000/api/mechanics/all')
+    const data = await res.json().catch(() => ({}))
+    mechanics.value = Array.isArray(data) ? data : (data.mechanics || [])
+  } catch (e) {
+    loadError.value = 'Failed to load mechanics.'
+    mechanics.value = []
+    console.error(e)
+  } finally {
+    loading.value = false
   }
 }
 
-onMounted(fetchMechanics)
+onMounted(() => {
+  if (!isAdmin) {
+    router.replace('/')
+  } else {
+    fetchMechanics()
+  }
+})
 
 function resetForm() {
-  form.value = { name: '', specialization: '', days_available: '', time_available: '', status: '', availability: '' }
+  form.value = {
+    name: '',
+    specialization: '',
+    days_available: '',
+    time_available: '',
+    status: '',
+    availability: ''
+  }
   editId.value = null
 }
 
 async function addMechanic() {
-  await fetch('http://localhost:5000/api/mechanics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(form.value)
-  })
-  showAddModal.value = false
-  resetForm()
-  fetchMechanics()
+  try {
+    const res = await fetch('http://localhost:5000/api/mechanics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form.value)
+    })
+    if (!res.ok) throw new Error('Add failed')
+    showAddModal.value = false
+    resetForm()
+    await fetchMechanics()
+  } catch (e) {
+    alert('Failed to add mechanic.')
+    console.error(e)
+  }
 }
 
 function openEditModal(mechanic) {
   form.value = {
-    name: mechanic.name,
-    specialization: mechanic.specialization,
+    name: mechanic.name || '',
+    specialization: mechanic.specialization || '',
     days_available: mechanic.days_available || '',
     time_available: mechanic.time_available || '',
-    status: mechanic.status,
+    status: mechanic.status || '',
     availability: mechanic.availability || ''
   }
-  editId.value = mechanic.mechanic_id
+  editId.value = mechanic.mechanic_id ?? mechanic.id
   showEditModal.value = true
 }
 
 async function updateMechanic() {
-  await fetch(`http://localhost:5000/api/mechanics/${editId.value}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(form.value)
-  })
-  showEditModal.value = false
-  resetForm()
-  fetchMechanics()
+  try {
+    const res = await fetch(`http://localhost:5000/api/mechanics/${editId.value}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form.value)
+    })
+    if (!res.ok) throw new Error('Update failed')
+    showEditModal.value = false
+    resetForm()
+    await fetchMechanics()
+  } catch (e) {
+    alert('Failed to update mechanic.')
+    console.error(e)
+  }
 }
 
 async function removeMechanic(id) {
-  if (confirm('Remove this mechanic?')) {
-    await fetch(`http://localhost:5000/api/mechanics/${id}`, { method: 'DELETE' })
-    fetchMechanics()
+  if (!id) return
+  if (!confirm('Remove this mechanic?')) return
+  try {
+    const res = await fetch(`http://localhost:5000/api/mechanics/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error('Delete failed')
+    await fetchMechanics()
+  } catch (e) {
+    alert('Failed to remove mechanic.')
+    console.error(e)
   }
 }
 
 function handleLogout() {
-  localStorage.removeItem('token'); 
-  window.location.href = '/';  
+  localStorage.removeItem('token')
+  window.location.href = '/'
 }
-
 </script>

@@ -20,7 +20,7 @@
           <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
         </button>
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
+        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogout = true"></i>
       </div>
     </header>
 
@@ -54,6 +54,21 @@
             class="w-full border rounded px-3 py-2 mb-4"
             placeholder="Enter vehicle model"
           />
+          <div class="mb-4">
+            <span class="font-semibold">Choose Mechanic:</span>
+            <div v-if="mechanicLoading" class="ml-2 text-gray-500">Loading mechanics...</div>
+            <select
+              v-else
+              v-model="selectedMechanic"
+              class="w-full border rounded px-3 py-2 mt-2"
+            >
+              <option value="" disabled>Select a mechanic</option>
+              <option v-for="mech in availableMechanics" :key="mech.id" :value="mech.id">
+                {{ mech.name }}
+              </option>
+            </select>
+            <div v-if="!mechanicLoading && availableMechanics.length === 0" class="text-red-600 mt-2">No mechanics available</div>
+          </div>
           <div class="flex justify-end gap-2">
             <button @click="submitModel" class="bg-yellow-400 px-4 py-2 rounded font-bold">Submit</button>
             <button @click="closeModal" class="bg-gray-300 px-4 py-2 rounded font-bold">Cancel</button>
@@ -77,7 +92,6 @@
 </template>
 
 <script setup>
-
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -88,48 +102,70 @@ onMounted(() => {
     router.push('/')
   }
 })
+
 const services = [
   {
     title: 'Valve Tuning',
     desc: 'Wiring installation and trouble shooting.',
-    img: 'https://i.ibb.co/0j7Q8Q8/valve-tuning.jpg'
+    img: new URL('../assets/images/sparkplug.webp', import.meta.url).href
   },
   {
     title: 'Change Oil',
     desc: 'Clean oil to keep your engine running smoothly and efficiently.',
-    img: 'https://i.ibb.co/0j7Q8Q8/change-oil.jpg'
+    img: new URL('../assets/images/changeoil.jpg', import.meta.url).href
   },
   {
     title: 'Brake Service',
     desc: 'Brake inspections, repairs, & replacements to ensure your safety on the road.',
-    img: 'https://i.ibb.co/0j7Q8Q8/brake-service.jpg'
+    img: new URL('../assets/images/brake.png', import.meta.url).href
   },
   {
     title: 'General Maintenance',
     desc: 'Routine maintenance service',
-    img: 'https://i.ibb.co/0j7Q8Q8/general-maintenance.jpg'
+    img: new URL('../assets/images/general.webp', import.meta.url).href
   }
 ]
 
 const selectedService = ref(null)
 const vehicleModel = ref('')
 const showLogoutModal = ref(false)
+const mechanicAvailable = ref(null)
+const mechanicLoading = ref(false)
+const availableMechanics = ref([])
+const selectedMechanic = ref('')
+
+async function fetchMechanicAvailability(serviceTitle) {
+  mechanicLoading.value = true
+  availableMechanics.value = []
+  selectedMechanic.value = ''
+  try {
+    // Send the service as a query parameter!
+    const res = await fetch(`http://localhost:5000/api/mechanics`)
+    const data = await res.json()
+    availableMechanics.value = Array.isArray(data.mechanics) ? data.mechanics : []
+  } catch (e) {
+    availableMechanics.value = []
+  } finally {
+    mechanicLoading.value = false
+  }
+}
 
 function selectService(service) {
   selectedService.value = service
   vehicleModel.value = ''
+  fetchMechanicAvailability()
 }
 
 function closeModal() {
   selectedService.value = null
   vehicleModel.value = ''
+  mechanicAvailable.value = null
 }
 
 async function submitModel() {
-  if (vehicleModel.value.trim()) {
+  if (vehicleModel.value.trim() && selectedMechanic.value) {
     const user_id = localStorage.getItem('user_id')
     const name = localStorage.getItem('name')
-    console.log('user_id from localStorage:', user_id)
     if (!user_id) {
       alert('You must be logged in to book a service.')
       return
@@ -144,7 +180,8 @@ async function submitModel() {
           user_id: Number(user_id), 
           name,
           vehicle_model: vehicleModel.value,
-          service_requested: selectedService.value.title
+          service_requested: selectedService.value.title,
+          mechanic_id: selectedMechanic.value
         })
       })
       if (!response.ok) throw new Error('Failed to submit booking')
@@ -154,6 +191,8 @@ async function submitModel() {
       alert('Failed to submit booking.')
       console.error(err)
     }
+  } else {
+    alert('Please enter your vehicle model and select a mechanic.')
   }
 }
 
