@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 const router = useRouter();
 
 const showLogoutModal = ref(false)
-const notifications = ref<any[]>([])
+const notifications = ref<any[]>([]) // Adjust type as needed
 const showNotifications = ref(false)
 
 async function fetchNotifications() {
