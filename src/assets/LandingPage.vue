@@ -3,13 +3,7 @@
     <!-- Header -->
     <header class="header">
       <div class="header-left">
-        <span class="logo"><span class="logo-bold">Rykz</span>motocare</span>
-      </div>
-      <div class="header-center">
-        <button class="shop-btn">
-          <i class="fa fa-shopping-cart"></i> BROWSE YOUR PARTS
-        </button>
-        <input class="search-bar" type="text" placeholder="Search..." />
+        <span class="logo"><span class="logo-bold ">Rykz</span>motocare</span>
       </div>
       <div class="header-right">
         <i class="fa fa-user-circle" @click="showLogin = true" style="cursor:pointer;"></i>
@@ -19,6 +13,8 @@
     <nav class="nav">
   <span @click="requireLogin('/parts')" style="cursor:pointer;">PARTS</span>
   <span @click="requireLogin('/accessories')" style="cursor:pointer;">ACCESSORIES</span>
+  <span @click="requireLogin('/tires')" style="cursor:pointer;">TIRES</span>
+  <span @click="requireLogin('/oil')" style="cursor:pointer;">OIL</span>
   <span @click="requireLogin('/services')" style="cursor:pointer;">SERVICES</span>
   <span class="sale" @click="requireLogin('/sale')" style="cursor:pointer;">SALE</span>
     </nav>
@@ -33,87 +29,60 @@
         position: relative;
       "
     >
-      <div class="hero-content">
+     <div class="hero-content">
         <h1>High-Performance <br /><span class="highlight">Motor Parts</span></h1>
         <p>Everything you need for your ride. Engineered to perform.</p>
+        <!-- Browse Button moved here -->
+        <button class="shop-btn mt-4">
+         BROWSE YOUR PARTS
+        </button>
       </div>
-      <img class="hero-bike" src="https://i.ibb.co/7Q8Q8Q8/bike.png" alt="Motorbike" />
+      <img class="hero-bike" src="../assets/images/motorcycle.png" alt="Motorbike" />
     </section>
     <!-- Top Selling Parts -->
     <section class="top-selling">
       <h2>TOP SELLING PARTS</h2>
       <div class="parts-grid">
-        <img src="https://i.ibb.co/6b7Q8Q8/part1.png" alt="Part 1" />
-        <img src="https://i.ibb.co/6b7Q8Q8/part2.png" alt="Part 2" />
-        <img src="https://i.ibb.co/6b7Q8Q8/part3.png" alt="Part 3" />
-        <img src="https://i.ibb.co/6b7Q8Q8/part4.png" alt="Part 4" />
+        <img src="../assets/images/sparkplug.webp" alt="Part 1" />
+        <img src="../assets/images/minishocks.png" alt="Part 2" />
+        <img src="../assets/images/cvt-pullry-kit.png" alt="Part 3" />
+        <img src="../assets/images/carb.png" alt="Part 4" />
       </div>
     </section>
-    <!-- Featured Categories -->
-    <section class="categories">
-      <h2>FEATURED CATEGORIES</h2>
-      <div class="categories-grid">
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/helmet.png" alt="Helmet" />
-          <span>HELMETS</span>
-        </div>
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/gear.png" alt="Riding Gear" />
-          <span>RIDING GEAR</span>
-        </div>
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/parts.png" alt="Parts" />
-          <span>PARTS</span>
-        </div>
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/tires.png" alt="Tires" />
-          <span>TIRES</span>
-        </div>
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/accessories.png" alt="Accessories" />
-          <span>ACCESSORIES</span>
-        </div>
-        <div class="cat-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/bluetooth.png" alt="Bluetooth" />
-          <span>BLUETOOTH UNITS</span>
-        </div>
-      </div>
-    </section>
+   
     <!-- Service Offers -->
     <section class="services">
       <h2>OUR SERVICE OFFERS</h2>
       <div class="services-grid">
         <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/valve.png" alt="Valve Tuning" />
-          <h3>Valve Tuning</h3>
-          <p>Professional motorcycle wiring installation and troubleshooting.</p>
-        </div>
-        <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/oil.png" alt="Change Oil" />
-          <h3>Change Oil</h3>
-          <p>Quick and efficient oil changes to keep your engine running smoothly.</p>
-        </div>
-        <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/brake.png" alt="Brake Service" />
-          <h3>Brake Service</h3>
-          <p>Comprehensive brake inspection and maintenance to ensure your safety.</p>
-        </div>
-        <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/cvt.png" alt="CVT Pulley Cleaning" />
-          <h3>CVT Pulley Cleaning</h3>
-          <p>Service removes dirt, grime, and old lubricants from the pulleys.</p>
-        </div>
-        <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/maintenance.png" alt="General Maintenance" />
+          <img src="../assets/images/general.webp" alt="General Maintenance" />
           <h3>General Maintenance</h3>
           <p>Routine maintenance services to keep your motorcycle in peak condition.</p>
         </div>
         <div class="service-item">
-          <img src="https://i.ibb.co/6b7Q8Q8/wiring.png" alt="Wiring" />
+          <img src="../assets/images/changeoil.jpg" alt="Change Oil" />
+          <h3>Change Oil</h3>
+          <p>Quick and efficient oil changes to keep your engine running smoothly.</p>
+        </div>
+        <div class="service-item">
+          <img src="../assets/images/brake.png" alt="Brake Service" />
+          <h3>Brake Service</h3>
+          <p>Comprehensive brake inspection and maintenance to ensure your safety.</p>
+        </div>
+        <div class="service-item">
+          <img src="../assets/images/cvtcleaning.png" alt="CVT Pulley Cleaning" />
+          <h3>CVT Pulley Cleaning</h3>
+          <p>Service removes dirt, grime, and old lubricants from the pulleys.</p>
+        </div>
+      
+        <div class="service-item">
+          <img src="../assets/images/wiring.webp" alt="Wiring" />
           <h3>Wiring</h3>
           <p>Professional motorcycle wiring installation and troubleshooting.</p>
         </div>
       </div>
+       
+
     </section>
     <!-- Services Info -->
     <section class="services-info">
