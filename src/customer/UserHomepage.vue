@@ -4,13 +4,33 @@ import { onMounted, ref } from 'vue';
 
 const router = useRouter();
 
+const showLogoutModal = ref(false)
+const notifications = ref<any[]>([])
+const showNotifications = ref(false)
+
+async function fetchNotifications() {
+  const user_id = localStorage.getItem('user_id')
+  if (!user_id) return
+  try {
+    const res = await fetch(`http://localhost:5000/api/notifications/${user_id}`)
+    if (res.ok) {
+      const data = await res.json()
+      console.log('Fetched notifications:', data.notifications) // Debug line
+      notifications.value = Array.isArray(data.notifications)
+        ? data.notifications
+        : []
+    }
+  } catch {
+    notifications.value = []
+  }
+}
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
-    router.push('/');
+    router.push('/')
   }
-});
-
-const showLogoutModal = ref(false)
+  fetchNotifications()
+})
 
 function handleLogout() {
   localStorage.removeItem('token')
@@ -43,6 +63,27 @@ function handleLogout() {
           <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
         </button>
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
+        <!-- Bell Icon -->
+        <div class="relative">
+          <i
+            class="fa fa-bell text-2xl cursor-pointer"
+            @click="showNotifications = !showNotifications"
+          ></i>
+          <!-- Notification dropdown -->
+          <div
+            v-if="showNotifications"
+            class="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg z-50"
+          >
+            <div v-if="notifications.length" class="divide-y divide-gray-200">
+              <div v-for="(note, idx) in notifications" :key="idx" class="p-3 text-sm">
+                <div class="font-bold text-yellow-600" v-if="note.type">{{ note.type }}</div>
+                <div>{{ note.message }}</div>
+                <div class="text-xs text-gray-400" v-if="note.created_at">{{ new Date(note.created_at).toLocaleString() }}</div>
+              </div>
+            </div>
+            <div v-else class="p-3 text-sm text-gray-500">No notifications</div>
+          </div>
+        </div>
         <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
       </div>
     </header>

@@ -126,20 +126,15 @@ function resetForm() {
 }
 
 async function sendNotification() {
-  const formData = new FormData();
-  formData.append('booking_id', bookingId.value);
-  formData.append('amount_due', amountDue.value);
-  formData.append('due_date', dueDate.value);
-  formData.append('payment_status', paymentStatus.value);
-  formData.append('message', message.value);
-  if (invoiceFile.value) {
-    formData.append('invoice', invoiceFile.value);
-  }
-
   try {
-    const res = await fetch('http://localhost:5000/api/customer-bills', {
+    const res = await fetch('http://localhost:5000/api/notifications', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: customerId.value,
+        message: message.value,
+        type: 'billing'
+      })
     });
     const data = await res.json();
     if (res.ok) {

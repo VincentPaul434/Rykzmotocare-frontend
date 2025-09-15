@@ -34,7 +34,7 @@
           :key="tire.id"
           class="bg-white rounded-xl shadow w-full max-w-xs p-4 flex flex-col items-center"
         >
-          <img :src="tire.image" alt="Tire" class="w-28 h-28 object-contain mb-2" />
+          <img :src="getImageUrl(tire.image_url)" alt="Tire" class="w-28 h-28 object-contain mb-2" />
           <h4 class="font-bold mb-1 text-center">{{ tire.name }}</h4>
           <p class="text-sm text-center mb-1">{{ tire.description }}</p>
           <p class="text-yellow-600 font-bold mb-2">${{ tire.price }}</p>
@@ -61,52 +61,40 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+const search = ref('')
+const tires = ref([])
+const showLogoutModal = ref(false)
+
+function getImageUrl(url) {
+  if (!url) return 'https://via.placeholder.com/100x100?text=No+Image'
+  return url.startsWith('/uploads')
+    ? `http://localhost:5000${url}`
+    : url
+}
+
+async function fetchTires() {
+  try {
+    const res = await fetch('http://localhost:5000/api/inventory?category=tires')
+    if (!res.ok) throw new Error('Failed to fetch tires')
+    tires.value = await res.json()
+  } catch (err) {
+    // Optionally show notification
+  }
+}
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
     router.push('/')
   }
+  fetchTires()
 })
-
-const search = ref('')
-const tires = ref([
-  {
-    id: 1,
-    name: 'Sport Bike Tire',
-    description: 'High grip tire for sport bikes.',
-    price: 99.99,
-    image: 'https://placehold.co/100x100?text=Tire+1'
-  },
-  {
-    id: 2,
-    name: 'Touring Tire',
-    description: 'Long-lasting tire for touring motorcycles.',
-    price: 89.99,
-    image: 'https://placehold.co/100x100?text=Tire+2'
-  },
-  {
-    id: 3,
-    name: 'Off-Road Tire',
-    description: 'Durable tire for off-road adventures.',
-    price: 109.99,
-    image: 'https://placehold.co/100x100?text=Tire+3'
-  },
-  {
-    id: 4,
-    name: 'Scooter Tire',
-    description: 'Reliable tire for city scooters.',
-    price: 59.99,
-    image: 'https://placehold.co/100x100?text=Tire+4'
-  }
-])
 
 const filteredTires = computed(() =>
   tires.value.filter(tire =>
     tire.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    tire.description.toLowerCase().includes(search.value.toLowerCase())
+    (tire.description || '').toLowerCase().includes(search.value.toLowerCase())
   )
 )
-
-const showLogoutModal = ref(false)
 
 function handleLogout() {
   localStorage.removeItem('token')

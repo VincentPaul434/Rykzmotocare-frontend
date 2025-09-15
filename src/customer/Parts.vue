@@ -34,10 +34,14 @@
           :key="part.id"
           class="bg-white rounded-xl shadow w-full max-w-xs p-4 flex flex-col items-center"
         >
-          <img :src="part.image" alt="Part" class="w-28 h-28 object-contain mb-2" />
+          <img
+            :src="getImageUrl(part.image_url)"
+            alt="Part"
+            class="w-full h-40 object-cover rounded-t mb-2"
+          />
           <h4 class="font-bold mb-1 text-center">{{ part.name }}</h4>
           <p class="text-sm text-center mb-1">{{ part.description }}</p>
-          <p class="text-yellow-600 font-bold mb-2">${{ part.price }}</p>
+          <p class="text-yellow-600 font-bold mb-2">PHP{{ part.price }}</p>
         </div>
       </div>
     </section>
@@ -61,52 +65,40 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+const search = ref('')
+const parts = ref([])
+const showLogoutModal = ref(false)
+
+function getImageUrl(url) {
+  if (!url) return 'https://via.placeholder.com/100x100?text=No+Image'
+  return url.startsWith('/uploads')
+    ? `http://localhost:5000${url}`
+    : url
+}
+
+async function fetchParts() {
+  try {
+    const res = await fetch('http://localhost:5000/api/inventory?category=parts')
+    if (!res.ok) throw new Error('Failed to fetch parts')
+    parts.value = await res.json()
+  } catch (err) {
+    // Optionally show notification
+  }
+}
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
     router.push('/')
   }
+  fetchParts()
 })
-
-const search = ref('')
-const parts = ref([
-  {
-    id: 1,
-    name: 'Brake Pads',
-    description: 'High-performance brake pads for sport bikes.',
-    price: 49.99,
-    image: 'https://placehold.co/100x100?text=Part+1'
-  },
-  {
-    id: 2,
-    name: 'Oil Filter',
-    description: 'Durable oil filter for extended engine life.',
-    price: 19.99,
-    image: 'https://placehold.co/100x100?text=Part+2'
-  },
-  {
-    id: 3,
-    name: 'Spark Plug',
-    description: 'Premium spark plug for better ignition.',
-    price: 9.99,
-    image: 'https://placehold.co/100x100?text=Part+3'
-  },
-  {
-    id: 4,
-    name: 'Chain Kit',
-    description: 'Complete chain kit for smooth riding.',
-    price: 89.99,
-    image: 'https://placehold.co/100x100?text=Part+4'
-  }
-])
 
 const filteredParts = computed(() =>
   parts.value.filter(part =>
     part.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    part.description.toLowerCase().includes(search.value.toLowerCase())
+    (part.description || '').toLowerCase().includes(search.value.toLowerCase())
   )
 )
-
-const showLogoutModal = ref(false)
 
 function handleLogout() {
   localStorage.removeItem('token')

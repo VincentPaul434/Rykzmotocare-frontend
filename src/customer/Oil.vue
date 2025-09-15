@@ -34,10 +34,14 @@
           :key="oil.id"
           class="bg-white rounded-xl shadow w-full max-w-xs p-4 flex flex-col items-center"
         >
-          <img :src="oil.image" alt="Oil" class="w-28 h-28 object-contain mb-2" />
+          <img
+            :src="getImageUrl(oil.image_url)"
+            alt="Oil"
+            class="w-full h-40 object-cover rounded-t mb-2"
+            />
           <h4 class="font-bold mb-1 text-center">{{ oil.name }}</h4>
           <p class="text-sm text-center mb-1">{{ oil.description }}</p>
-          <p class="text-yellow-600 font-bold mb-2">${{ oil.price }}</p>
+          <p class="text-yellow-600 font-bold mb-2">PHP{{ oil.price }}</p>
         </div>
       </div>
     </section>
@@ -61,52 +65,40 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+const search = ref('')
+const oilProducts = ref([])
+const showLogoutModal = ref(false)
+
+function getImageUrl(url) {
+  if (!url) return 'https://via.placeholder.com/100x100?text=No+Image'
+  return url.startsWith('/uploads')
+    ? `http://localhost:5000${url}`
+    : url
+}
+
+async function fetchOil() {
+  try {
+    const res = await fetch('http://localhost:5000/api/inventory?category=oil')
+    if (!res.ok) throw new Error('Failed to fetch oil')
+    oilProducts.value = await res.json()
+  } catch (err) {
+    // Optionally show notification
+  }
+}
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
     router.push('/')
   }
+  fetchOil()
 })
-
-const search = ref('')
-const oilProducts = ref([
-  {
-    id: 1,
-    name: 'Synthetic Motor Oil',
-    description: 'High-performance synthetic oil for all engines.',
-    price: 29.99,
-    image: 'https://placehold.co/100x100?text=Oil+1'
-  },
-  {
-    id: 2,
-    name: 'Mineral Motor Oil',
-    description: 'Reliable mineral oil for daily use.',
-    price: 19.99,
-    image: 'https://placehold.co/100x100?text=Oil+2'
-  },
-  {
-    id: 3,
-    name: 'Semi-Synthetic Oil',
-    description: 'Balanced protection and performance.',
-    price: 24.99,
-    image: 'https://placehold.co/100x100?text=Oil+3'
-  },
-  {
-    id: 4,
-    name: 'Racing Oil',
-    description: 'Ultimate protection for high-performance engines.',
-    price: 39.99,
-    image: 'https://placehold.co/100x100?text=Oil+4'
-  }
-])
 
 const filteredOil = computed(() =>
   oilProducts.value.filter(oil =>
     oil.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    oil.description.toLowerCase().includes(search.value.toLowerCase())
+    (oil.description || '').toLowerCase().includes(search.value.toLowerCase())
   )
 )
-
-const showLogoutModal = ref(false)
 
 function handleLogout() {
   localStorage.removeItem('token')

@@ -20,7 +20,7 @@
           <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
         </button>
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogout = true"></i>
+        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
       </div>
     </header>
 
