@@ -19,7 +19,8 @@
         </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
         <CartIcon />
-        <i class="fa fa-user-circle text-2xl" @click="showLogoutModal = true"></i>
+        <!-- replace icon with dropdown -->
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 
@@ -73,7 +74,7 @@
           Available stock: {{ selectedItem?.quantity ?? '—' }}
         </p>
 
-        <div class="flex items-center gap-2 mb-6">
+        <div class="flex items-center gap-2 mb-2">
           <button class="px-3 py-2 border rounded" @click="decrementQty">-</button>
           <input
             type="number"
@@ -85,11 +86,17 @@
           />
           <button class="px-3 py-2 border rounded" @click="incrementQty">+</button>
         </div>
+        <p v-if="qtyError" class="text-sm text-red-600 mb-4">{{ qtyError }}</p>
+        <p v-else class="text-sm text-gray-500 mb-4" v-show="checkingStock">Checking availability…</p>
 
         <div class="flex justify-end gap-2">
           <button class="px-4 py-2 border rounded" @click="closeQtyModal">Cancel</button>
-          <button class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded font-bold" @click="confirmAddToCart">
-            Add {{ qty }} to Cart
+          <button
+            class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded font-bold disabled:opacity-60"
+            :disabled="checkingStock"
+            @click="confirmAddToCart"
+          >
+            {{ checkingStock ? 'Checking…' : `Add ${qty} to Cart` }}
           </button>
         </div>
       </div>
@@ -110,6 +117,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
+import ProfileMenu from '../components/ProfileMenu.vue'
+
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'   // added
 
 const accessories = ref([])
 const router = useRouter()
@@ -117,6 +127,8 @@ const showLogoutModal = ref(false)
 const showQtyModal = ref(false)
 const qty = ref(1)
 const selectedItem = ref(null)
+const checkingStock = ref(false)          // added
+const qtyError = ref('')                  // added
 const maxQty = computed(() => {
   const q = selectedItem.value?.quantity
   return typeof q === 'number' && q > 0 ? q : 9999
@@ -164,14 +176,27 @@ function getImageUrl(url) {
   return `${base}/${normalized.replace(/^\/+/, '')}`
 }
 
+// added: validate against backend
+async function validateCartAPI(items) {
+  const res = await fetch(`${API}/api/orders/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items })
+  })
+  if (!res.ok) throw new Error(await res.text().catch(() => 'Validate failed'))
+  return res.json() // expect { issues: [], details: [...] } (ok if no issues)
+}
+
 function openQtyModal(item) {
   selectedItem.value = item
   qty.value = 1
+  qtyError.value = ''          // added
   showQtyModal.value = true
 }
 function closeQtyModal() {
   showQtyModal.value = false
   selectedItem.value = null
+  qtyError.value = ''          // added
 }
 
 function clampQty() {
@@ -185,10 +210,25 @@ function decrementQty() {
   if (qty.value > 1) qty.value--
 }
 
-function confirmAddToCart() {
+async function confirmAddToCart() {
   if (!selectedItem.value) return
-  addToCart(selectedItem.value, qty.value)
-  closeQtyModal()
+  qtyError.value = ''
+  checkingStock.value = true
+  try {
+    const id = selectedItem.value.item_id ?? selectedItem.value.id
+    const res = await validateCartAPI([{ id, qty: qty.value }])
+    if (Array.isArray(res.issues) && res.issues.length) {
+      // show first issue from backend (e.g., out of stock, price change)
+      qtyError.value = res.issues[0]?.message || 'Item not available in requested quantity.'
+      return
+    }
+    addToCart(selectedItem.value, qty.value)
+    closeQtyModal()
+  } catch (e) {
+    qtyError.value = 'Unable to validate stock. Please try again.'
+  } finally {
+    checkingStock.value = false
+  }
 }
 
 function getCartKey() {

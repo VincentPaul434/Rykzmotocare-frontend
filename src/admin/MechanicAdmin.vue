@@ -126,6 +126,14 @@
             <option value="Not Available">Not Available</option>
           </select>
           <input v-model="form.availability" class="w-full mb-3 p-2 border rounded" placeholder="Specialization" required />
+
+          <!-- Photo upload -->
+          <label class="block font-semibold mb-1">Photo</label>
+          <input type="file" accept="image/*" @change="onPhotoChange" class="w-full mb-3 p-2 border rounded" />
+          <div v-if="photoPreview" class="mb-4">
+            <img :src="photoPreview" alt="Preview" class="w-24 h-24 object-cover rounded border" />
+          </div>
+
           <button class="w-full bg-black text-white font-bold rounded py-2 mt-2 hover:bg-yellow-400 hover:text-black transition" type="submit">
             Add Mechanic
           </button>
@@ -199,6 +207,10 @@ const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editId = ref(null)
 
+// Photo upload state
+const photoFile = ref(null)
+const photoPreview = ref(null)
+
 const form = ref({
   name: '',
   specialization: '',
@@ -221,7 +233,7 @@ async function fetchMechanics() {
   loading.value = true
   loadError.value = ''
   try {
-    const res = await fetch('http://localhost:5000/api/mechanics/all')
+    const res = await fetch('http://localhost:5000/api/mechanics')
     const data = await res.json().catch(() => ({}))
     mechanics.value = Array.isArray(data) ? data : (data.mechanics || [])
   } catch (e) {
@@ -251,14 +263,32 @@ function resetForm() {
     availability: ''
   }
   editId.value = null
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+  photoFile.value = null
+  photoPreview.value = null
+}
+
+function onPhotoChange(e) {
+  const file = e.target?.files?.[0] || null
+  photoFile.value = file
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+  photoPreview.value = file ? URL.createObjectURL(file) : null
 }
 
 async function addMechanic() {
   try {
+    const fd = new FormData()
+    fd.append('name', form.value.name)
+    fd.append('specialization', form.value.specialization)
+    fd.append('days_available', form.value.days_available)
+    fd.append('time_available', form.value.time_available)
+    fd.append('status', form.value.status)
+    fd.append('availability', form.value.availability)
+    if (photoFile.value) fd.append('photo', photoFile.value) // field name: photo
+
     const res = await fetch('http://localhost:5000/api/mechanics', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value)
+      body: fd // no Content-Type header for FormData
     })
     if (!res.ok) throw new Error('Add failed')
     showAddModal.value = false

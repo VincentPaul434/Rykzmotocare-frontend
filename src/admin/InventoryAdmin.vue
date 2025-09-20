@@ -190,7 +190,7 @@
               <input type="file" accept="image/*" @change="onEditImageChange" class="border rounded px-3 py-2 w-full" />
               <div class="mt-3">
                 <img v-if="editImagePreview" :src="editImagePreview" alt="Preview" class="h-32 w-full object-cover rounded" />
-                <img v-else-if="form.image_url" :src="form.image_url" alt="Current" class="h-32 w-full object-cover rounded" />
+                <img v-else-if="form.image_url" :src="img(form.image_url)" alt="Current" class="h-32 w-full object-cover rounded" />
               </div>
             </div>
             <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded py-2 mt-2" type="submit">
@@ -204,8 +204,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 const showAddModal = ref(false)
 const showSellModal = ref(false)
@@ -226,22 +228,32 @@ const form = ref({
   image_url: '' // for showing current image in Edit
 })
 
+function img(url) {                       // added
+  if (!url) return ''
+  const n = String(url).replace(/\\/g, '/')
+  if (/^https?:\/\//i.test(n)) return n
+  return `${API}${n.startsWith('/') ? '' : '/'}${n}`
+}
+
 // Image upload state
 const addImageFile = ref(null)
 const addImagePreview = ref('')
 const editImageFile = ref(null)
 const editImagePreview = ref('')
 
-// Handlers
+function revokePreview(u) { if (u) URL.revokeObjectURL(u) }
+
 function onAddImageChange(e) {
   const file = e.target.files?.[0]
   addImageFile.value = file || null
+  revokePreview(addImagePreview.value)
   addImagePreview.value = file ? URL.createObjectURL(file) : ''
 }
 
 function onEditImageChange(e) {
   const file = e.target.files?.[0]
   editImageFile.value = file || null
+  revokePreview(editImagePreview.value)
   editImagePreview.value = file ? URL.createObjectURL(file) : ''
 }
 
@@ -263,10 +275,10 @@ const router = useRouter()
 
 async function fetchItems() {
   try {
-    const res = await fetch('http://localhost:5000/api/inventory')
+    const res = await fetch(`${API}/api/inventory`) // was hardcoded
     const data = await res.json()
     items.value = data
-  } catch (e) {
+  } catch {
     items.value = []
   }
 }
@@ -289,19 +301,17 @@ async function addItem() {
     fd.append('price', form.value.price)
     fd.append('quantity', form.value.qty)
     fd.append('date_added', form.value.date)
-    if (addImageFile.value) fd.append('image', addImageFile.value) // backend should read req.file
+    if (addImageFile.value) fd.append('image', addImageFile.value) // only if chosen
 
-    await fetch('http://localhost:5000/api/inventory', {
-      method: 'POST',
-      body: fd
-    })
+    await fetch(`${API}/api/inventory`, { method: 'POST', body: fd })
 
     showAddModal.value = false
     form.value = { name: '', brand: '', category: '', code: '', date: '', qty: '', price: '', image_url: '' }
     addImageFile.value = null
+    revokePreview(addImagePreview.value)
     addImagePreview.value = ''
     await fetchItems()
-  } catch (e) {
+  } catch {
     alert('Failed to add item')
   }
 }
@@ -349,6 +359,7 @@ function openEditModal(item) {
     image_url: item.image_url || ''
   }
   editImageFile.value = null
+  revokePreview(editImagePreview.value)
   editImagePreview.value = ''
   showEditModal.value = true
 }
@@ -365,20 +376,18 @@ async function editItem() {
     fd.append('price', form.value.price)
     fd.append('quantity', form.value.qty)
     fd.append('date_added', form.value.date)
-    // Only send a new file if selected; backend should keep existing if none
+    // Only send a new file if selected; backend keeps old when absent
     if (editImageFile.value) fd.append('image', editImageFile.value)
 
-    await fetch(`http://localhost:5000/api/inventory/${editId.value}`, {
-      method: 'PUT',
-      body: fd
-    })
+    await fetch(`${API}/api/inventory/${editId.value}`, { method: 'PUT', body: fd })
 
     showEditModal.value = false
     editId.value = null
     editImageFile.value = null
+    revokePreview(editImagePreview.value)
     editImagePreview.value = ''
     await fetchItems()
-  } catch (e) {
+  } catch {
     alert('Failed to edit item')
   }
 }
@@ -388,4 +397,8 @@ function handleLogout() {
   window.location.href = '/';  
 }
 
+onBeforeUnmount(() => {                   // cleanup previews
+  revokePreview(addImagePreview.value)
+  revokePreview(editImagePreview.value)
+})
 </script>

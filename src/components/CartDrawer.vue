@@ -69,10 +69,11 @@
         <span class="font-bold">{{ money(subtotal) }}</span>
       </div>
       <button
-        class="w-full border border-black py-2 rounded font-semibold hover:bg-black hover:text-white"
-        @click="goTo('/cart')"
+        class="w-full border border-black py-2 rounded font-semibold hover:bg-black hover:text-white disabled:opacity-60"
+        :disabled="checkingOut || !items.length"
+        @click="proceedToCheckout"
       >
-        Checkout
+        {{ checkingOut ? 'Starting checkout…' : 'Checkout' }}
       </button>
       <button
         class="w-full text-sm underline text-gray-600 hover:text-black text-left"
@@ -91,7 +92,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const open = ref(false)
 const items = ref([])
+const checkingOut = ref(false) // added
 const PLACEHOLDER = 'https://via.placeholder.com/64?text=Item'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 function getCartKey() {
   const uid = localStorage.getItem('user_id') || 'guest'
@@ -151,4 +154,55 @@ onUnmounted(() => {
   window.removeEventListener('cart:updated', onAnyChange)
   window.removeEventListener('storage', onAnyChange)
 })
+
+
+// Validate cart against backend
+async function validateCartAPI(payload) {
+  const res = await fetch(`${API}/api/orders/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error(await res.text().catch(() => 'Validate failed'))
+  return res.json() // { issues: [], details: [...] }
+}
+
+// Create order
+async function createOrderAPI(payload) {
+  const res = await fetch(`${API}/api/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error(await res.text().catch(() => 'Create order failed'))
+  return res.json() // { order_id, total_amount }
+}
+
+// Start checkout: validate -> create order -> route to checkout
+async function proceedToCheckout() {
+  if (!items.value.length) return
+  checkingOut.value = true
+  try {
+    const validatePayload = {
+      items: items.value.map(i => ({ id: i.id, qty: Math.max(1, Number(i.qty) || 1) }))
+    }
+    const v = await validateCartAPI(validatePayload)
+    if (Array.isArray(v.issues) && v.issues.length) {
+      alert(v.issues[0]?.message || 'Some items need attention (stock/price).')
+      return
+    }
+
+    const user_id = Number(localStorage.getItem('user_id') || 0)
+    const order = await createOrderAPI({ user_id, items: validatePayload.items })
+
+    // Close drawer and go to payment page
+    open.value = false
+    router.push({ path: '/checkout', query: { orderId: order.order_id } })
+  } catch (e) {
+    console.error(e)
+    alert('Unable to start checkout. Please try again.')
+  } finally {
+    checkingOut.value = false
+  }
+}
 </script>
