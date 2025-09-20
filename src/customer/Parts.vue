@@ -21,6 +21,8 @@
           <i class="fa fa-shopping-cart"></i> <span class="hidden sm:inline">SHOP YOUR PARTS</span>
         </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" v-model="search" placeholder="Search..." />
+        <!-- Added Cart Icon -->
+        <CartIcon />
         <i class="fa fa-user-circle text-2xl" @click="showLogoutModal = true"></i>
       </div>
     </header>
@@ -42,6 +44,13 @@
           <h4 class="font-bold mb-1 text-center">{{ part.name }}</h4>
           <p class="text-sm text-center mb-1">{{ part.description }}</p>
           <p class="text-yellow-600 font-bold mb-2">PHP{{ part.price }}</p>
+          <!-- Add to Cart -->
+          <button
+            class="mt-2 w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded"
+            @click="openQtyModal(part)"
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </section>
@@ -56,18 +65,58 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="notification"
+      class="fixed bottom-4 right-4 bg-yellow-400 text-black px-4 py-2 rounded shadow"
+    >
+      {{ notification }}
+    </div>
+
+    <!-- Quantity Modal -->
+    <div v-if="showQtyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+        <h2 class="text-xl font-bold mb-4">Select Quantity</h2>
+        <div class="flex items-center justify-between mb-4">
+          <button @click="decrementQty" class="bg-gray-200 px-4 py-2 rounded-l font-bold">-</button>
+          <input
+            type="number"
+            v-model.number="qty"  <!-- changed to .number -->
+            class="border text-center rounded-md w-16"
+            @blur="clampQty"
+          />
+          <button @click="incrementQty" class="bg-gray-200 px-4 py-2 rounded-r font-bold">+</button>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button @click="confirmAddToCart" class="bg-yellow-400 px-4 py-2 rounded font-bold">Add to Cart</button>
+          <button @click="closeQtyModal" class="bg-gray-300 px-4 py-2 rounded font-bold">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import CartIcon from '../components/CartIcon.vue'  // Added
 
 const router = useRouter()
 
 const search = ref('')
 const parts = ref([])
 const showLogoutModal = ref(false)
+const notification = ref(null)
+const showQtyModal = ref(false)
+const qty = ref(1)
+const selectedItem = ref(null)
+let notificationTimeout = null
+
+// Added: used by your qty modal handlers
+const maxQty = computed(() => {
+  const q = selectedItem.value?.quantity
+  return typeof q === 'number' && q > 0 ? q : 9999
+})
 
 function getImageUrl(url) {
   if (!url) return 'https://via.placeholder.com/100x100?text=No+Image'
@@ -99,6 +148,66 @@ const filteredParts = computed(() =>
     (part.description || '').toLowerCase().includes(search.value.toLowerCase())
   )
 )
+
+function showNotification(message, duration = 2000) {
+  notification.value = message
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => (notification.value = null), duration)
+}
+
+function getCartKey() {
+  const uid = localStorage.getItem('user_id') || 'guest'
+  return `cart:${uid}`
+}
+
+function readCart() {
+  try { return JSON.parse(localStorage.getItem(getCartKey()) || '[]') } catch { return [] }
+}
+
+function writeCart(cart) {
+  localStorage.setItem(getCartKey(), JSON.stringify(cart))
+  // keep badge/drawer in sync
+  window.dispatchEvent(new Event('cart:updated'))
+}
+
+function openQtyModal(item) {
+  selectedItem.value = item
+  qty.value = 1
+  showQtyModal.value = true
+}
+function closeQtyModal() {
+  showQtyModal.value = false
+  selectedItem.value = null
+}
+function clampQty() {
+  if (!qty.value || qty.value < 1) qty.value = 1
+  if (qty.value > maxQty.value) qty.value = maxQty.value
+}
+function incrementQty() {
+  if (qty.value < maxQty.value) qty.value++
+}
+function decrementQty() {
+  if (qty.value > 1) qty.value--
+}
+function confirmAddToCart() {
+  if (!selectedItem.value) return
+  addToCart(selectedItem.value, qty.value)
+  closeQtyModal()
+}
+
+// Replace addToCart with amount support
+function addToCart(item, amount = 1) {
+  const cart = readCart()
+  const id = item.item_id ?? item.id
+  const img = getImageUrl(item.image_url)
+  const addQty = Math.max(1, Math.min(amount, item.quantity ?? amount))
+  const found = cart.find(i => i.id === id)
+  if (found) found.qty += addQty
+  else cart.push({ id, name: item.name, price: item.price, image_url: img, qty: addQty, category: item.category })
+  writeCart(cart)
+  showNotification(`Added ${addQty} to cart`)
+  window.dispatchEvent(new Event('cart:open'))
+}
 
 function handleLogout() {
   localStorage.removeItem('token')

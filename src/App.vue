@@ -1,7 +1,10 @@
 <template>
-  <router-view />
+  <RouterView />
+  <CartIcon />
+  <CartDrawer />
 </template>
 
 <script setup>
-// No need to import components here since they're handled by the router
+import CartDrawer from './components/CartDrawer.vue';
+import CartIcon from './components/CartIcon.vue';
 </script>

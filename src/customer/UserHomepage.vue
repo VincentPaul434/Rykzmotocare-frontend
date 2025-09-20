@@ -145,33 +145,37 @@ function handleLogout() {
     <section class="bg-white py-10">
       <h2 class="text-2xl font-bold text-center mb-6">OUR SERVICE OFFERS</h2>
       <div class="flex flex-wrap justify-center gap-8">
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/valve-tuning.jpg" alt="Valve Tuning" />
-          <h3 class="font-bold mb-1">Valve Tuning</h3>
-          <p class="text-sm text-center">Professional motorcycle wiring installation and trouble shooting.</p>
-        </div>
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/change-oil.jpg" alt="Change Oil" />
-          <h3 class="font-bold mb-1">Change Oil</h3>
-          <p class="text-sm text-center">Quick and efficient oil changes to keep your engine running smoothly, reduce water, and extend the life of your motorcycle.</p>
-        </div>
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/brake-service.jpg" alt="Brake Service" />
-          <h3 class="font-bold mb-1">Brake Service</h3>
-          <p class="text-sm text-center">Comprehensive brake inspection and maintenance to ensure your safety.</p>
-        </div>
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/cvt.jpg" alt="CVT Pulley Cleaning Service" />
-          <h3 class="font-bold mb-1">CVT Pulley Cleaning Service</h3>
-          <p class="text-sm text-center">Removes dirt, grime, and old lubricants from the pulleys, ensuring smooth operation and efficient performance.</p>
-        </div>
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/general-maintenance.jpg" alt="General Maintenance" />
+        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center cursor-pointer"
+             @click="router.push('/services')">
+          <img class="w-full h-28 object-cover rounded mb-2" src="../assets/images/general.webp" alt="General Maintenance" />
           <h3 class="font-bold mb-1">General Maintenance</h3>
           <p class="text-sm text-center">Routine maintenance services to keep your motorcycle in peak condition.</p>
         </div>
-        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center">
-          <img class="w-full h-28 object-cover rounded mb-2" src="https://i.ibb.co/0j7Q8Q8/wiring.jpg" alt="Wiring" />
+
+        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center cursor-pointer"
+             @click="router.push('/services')">
+          <img class="w-full h-28 object-cover rounded mb-2" src="../assets/images/changeoil.jpg" alt="Change Oil" />
+          <h3 class="font-bold mb-1">Change Oil</h3>
+          <p class="text-sm text-center">Quick and efficient oil changes to keep your engine running smoothly.</p>
+        </div>
+
+        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center cursor-pointer"
+             @click="router.push('/services')">
+          <img class="w-full h-28 object-cover rounded mb-2" src="../assets/images/brake.png" alt="Brake Service" />
+          <h3 class="font-bold mb-1">Brake Service</h3>
+          <p class="text-sm text-center">Comprehensive brake inspection and maintenance to ensure your safety.</p>
+        </div>
+
+        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center cursor-pointer"
+             @click="router.push('/services')">
+          <img class="w-full h-28 object-cover rounded mb-2" src="../assets/images/cvtcleaning.png" alt="CVT Pulley Cleaning" />
+          <h3 class="font-bold mb-1">CVT Pulley Cleaning</h3>
+          <p class="text-sm text-center">Removes dirt, grime, and old lubricants from the pulleys.</p>
+        </div>
+
+        <div class="bg-gray-100 rounded-xl shadow p-4 w-64 flex flex-col items-center cursor-pointer"
+             @click="router.push('/services')">
+          <img class="w-full h-28 object-cover rounded mb-2" src="../assets/images/wiring.webp" alt="Wiring" />
           <h3 class="font-bold mb-1">Wiring</h3>
           <p class="text-sm text-center">Professional motorcycle wiring installation and troubleshooting.</p>
         </div>
