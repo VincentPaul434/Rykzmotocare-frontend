@@ -19,6 +19,7 @@ import FeedbackAdmin from './admin/FeedbackAdmin.vue'
 import customerCloseShop from './customer/customerCloseShop.vue'
 import ViewMechanic from './customer/ViewMechanic.vue'
 import BillsPayments from './customer/BillsPayments.vue'
+import Payment from './customer/Payment.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -40,7 +41,9 @@ const routes = [
   { path: '/feedback-admin', name: 'FeedbackAdmin', component: FeedbackAdmin },
   { path: '/customer-close-shop', name: 'customerCloseShop', component: customerCloseShop },
   { path: '/view-mechanic', name: 'ViewMechanic', component: ViewMechanic },
-  { path: '/bills', name: 'BillsPayments', component: BillsPayments }
+  { path: '/bills', name: 'BillsPayments', component: BillsPayments },
+  { path: '/payment', name: 'Payment', component: Payment }
+
 ]
 
 const router = createRouter({

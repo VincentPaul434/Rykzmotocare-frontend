@@ -163,8 +163,12 @@ async function validateCartAPI(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  if (!res.ok) throw new Error(await res.text().catch(() => 'Validate failed'))
-  return res.json() // { issues: [], details: [...] }
+  if (!res.ok) {
+    let msg = 'Validate failed'
+    try { const j = await res.json(); msg = j.message || j.issues?.[0] || msg } catch {}
+    throw new Error(msg)
+  }
+  return res.json()
 }
 
 // Create order
@@ -174,8 +178,12 @@ async function createOrderAPI(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  if (!res.ok) throw new Error(await res.text().catch(() => 'Create order failed'))
-  return res.json() // { order_id, total_amount }
+  if (!res.ok) {
+    let msg = 'Create order failed'
+    try { const j = await res.json(); msg = j.message || j.code || msg } catch {}
+    throw new Error(msg)
+  }
+  return res.json()
 }
 
 // Start checkout: validate -> create order -> route to checkout
@@ -184,23 +192,39 @@ async function proceedToCheckout() {
   checkingOut.value = true
   try {
     const validatePayload = {
-      items: items.value.map(i => ({ id: i.id, qty: Math.max(1, Number(i.qty) || 1) }))
+      items: items.value.map(i => ({
+        id: i.id ?? i.item_id,
+        qty: Math.max(1, Number(i.qty) || 1)
+      }))
     }
     const v = await validateCartAPI(validatePayload)
     if (Array.isArray(v.issues) && v.issues.length) {
-      alert(v.issues[0]?.message || 'Some items need attention (stock/price).')
+      alert(String(v.issues[0]) || 'Some items need attention (stock/price).')
       return
     }
 
     const user_id = Number(localStorage.getItem('user_id') || 0)
-    const order = await createOrderAPI({ user_id, items: validatePayload.items })
+    if (!user_id) {
+      alert('Please sign in before checkout.')
+      router.push('/login')
+      return
+    }
 
-    // Close drawer and go to payment page
+    const orderPayload = {
+      user_id,
+      items: items.value.map(i => ({
+        item_id: i.item_id ?? i.id,
+        qty: Math.max(1, Number(i.qty) || 1)
+      })),
+      // service_type: null // uncomment if your DB requires a value
+    }
+    const order = await createOrderAPI(orderPayload)
+
     open.value = false
-    router.push({ path: '/checkout', query: { orderId: order.order_id } })
+    router.push({ path: '/payment', query: { orderId: order.order_id } })
   } catch (e) {
     console.error(e)
-    alert('Unable to start checkout. Please try again.')
+    alert(e?.message || 'Unable to start checkout. Please try again.')
   } finally {
     checkingOut.value = false
   }
