@@ -16,6 +16,7 @@
           <router-link to="/booking-list" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Booking List</router-link>
           <router-link to="/mechanic-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Available Mechanics</router-link>
           <router-link to="/customer-bills" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Bills</router-link>
+          <router-link to="/customer-payment" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Payment</router-link>
           <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Feedbacks</a>
           <router-link to="/customer-approval" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Approval</router-link>
         </nav>
@@ -46,7 +47,7 @@
             <td class="border px-4 py-2">{{ booking.book_status }}</td>
             <td class="border px-4 py-2">
               <button class="text-blue-600 mr-2" @click="openModal(idx)">Update</button>|
-              <button class="text-green-600 ml-2" @click="notifyBooking(idx)">Notify</button>
+              <button class="text-green-600 ml-2" @click="openNotifyModal(idx)">Notify</button>
             </td>
           </tr>
         </tbody>
@@ -68,6 +69,18 @@
           <button @click="saveChanges" class="block mx-auto bg-white border px-4 py-1 rounded hover:bg-gray-300">Save Changes</button>
         </div>
       </div>
+      <!-- Notification Modal -->
+      <div v-if="showNotifyModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-gray-200 rounded-lg p-6 relative w-80">
+          <button @click="closeNotifyModal" class="absolute top-2 right-2 text-xl font-bold text-gray-700">&times;</button>
+          <h3 class="text-lg font-semibold mb-4 text-center">Send Notification</h3>
+          <div class="mb-4">
+            <label class="block mb-2 font-semibold">Message to Customer:</label>
+            <textarea v-model="notifyMessage" rows="4" class="w-full border rounded p-2" />
+          </div>
+          <button @click="sendNotification" class="block mx-auto bg-yellow-400 border px-4 py-1 rounded font-bold hover:bg-yellow-500">Send</button>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -77,6 +90,9 @@ import { ref, onMounted } from 'vue'
 
 const bookings = ref([])
 const showModal = ref(false)
+const showNotifyModal = ref(false)
+const notifyMessage = ref('')
+const notifyBookingIdx = ref(null)
 const selectedBookingIdx = ref(null)
 const modalStatus = ref({
   confirmed: false,
@@ -117,6 +133,20 @@ function closeModal() {
   showModal.value = false
 }
 
+function openNotifyModal(idx) {
+  notifyBookingIdx.value = idx
+  // Default message based on status
+  const booking = bookings.value[idx]
+  notifyMessage.value = `Your booking status is now: ${booking.book_status}`
+  showNotifyModal.value = true
+}
+
+function closeNotifyModal() {
+  showNotifyModal.value = false
+  notifyMessage.value = ''
+  notifyBookingIdx.value = null
+}
+
 async function saveChanges() {
   const statusMap = {
     confirmed: 'Confirmed',
@@ -149,8 +179,28 @@ async function saveChanges() {
   closeModal()
 }
 
-function notifyBooking(idx) {
-  alert('Notify feature not implemented.')
+async function sendNotification() {
+  const idx = notifyBookingIdx.value
+  if (idx === null) return
+  const booking = bookings.value[idx]
+  try {
+    // Send notification to the customer (user_id from booking)
+    const res = await fetch(`http://localhost:5000/api/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: booking.user_id, 
+        message: notifyMessage.value,
+        type: 'booking'
+      }),
+    })
+    if (!res.ok) throw new Error('Failed to send notification')
+    alert('Customer notified!')
+    closeNotifyModal()
+  } catch (err) {
+    alert('Could not send notification.')
+    console.error(err)
+  }
 }
 
 function handleLogout() {

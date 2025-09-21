@@ -21,7 +21,8 @@
         </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
         <CartIcon />
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
+        <!-- replace icon with ProfileMenu to match Accessories -->
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 
@@ -142,6 +143,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
+import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()
 

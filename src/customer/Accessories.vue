@@ -11,12 +11,10 @@
         <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="text-yellow-400 font-bold cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
+        <router-link to="/view-mechanic" class="cursor-pointer">MEET THE MECHANICS</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
-        <button class="bg-yellow-400 text-black font-bold px-3 md:px-4 py-2 rounded flex items-center gap-2 w-full md:w-auto">
-          <i class="fa fa-shopping-cart"></i> <span class="hidden sm:inline">SHOP YOUR ACCESSORIES</span>
-        </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
         <CartIcon />
         <!-- replace icon with dropdown -->

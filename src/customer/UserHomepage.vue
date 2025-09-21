@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { onMounted, ref } from 'vue';
+import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter();
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 const showLogoutModal = ref(false)
-const notifications = ref<any[]>([]) // Adjust type as needed
+const notifications = ref<any[]>([])
 const showNotifications = ref(false)
 
 async function fetchNotifications() {
   const user_id = localStorage.getItem('user_id')
   if (!user_id) return
   try {
-    const res = await fetch(`http://localhost:5000/api/notifications/${user_id}`)
+    const res = await fetch(`${API}/api/notifications/${user_id}`) // use API base
     if (res.ok) {
       const data = await res.json()
-      console.log('Fetched notifications:', data.notifications) // Debug line
-      notifications.value = Array.isArray(data.notifications)
-        ? data.notifications
-        : []
+      console.log('Fetched notifications:', data.notifications)
+      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
     }
   } catch {
     notifications.value = []
@@ -38,7 +38,6 @@ function handleLogout() {
   localStorage.removeItem('name')
   router.push('/')
 }
-
 </script>
 
 <template>
@@ -56,12 +55,10 @@ function handleLogout() {
         <router-link to="/tires" class="hidden md:inline cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="hidden md:inline cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="hidden md:inline cursor-pointer">SERVICES</router-link>
+        <router-link to="/view-mechanic" class="hidden md:inline cursor-pointer">MEET THE MECHANICS</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>
       <div class="flex items-center gap-3 mt-2 md:mt-0">
-        <button class="bg-yellow-400 text-black font-bold px-4 py-2 rounded flex items-center gap-2">
-          <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
-        </button>
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
         <!-- Bell Icon -->
         <div class="relative">
@@ -84,7 +81,8 @@ function handleLogout() {
             <div v-else class="p-3 text-sm text-gray-500">No notifications</div>
           </div>
         </div>
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
+        <!-- replace icon with ProfileMenu to match Accessories -->
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 

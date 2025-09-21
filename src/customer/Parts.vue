@@ -14,16 +14,14 @@
         <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
+        <router-link to="/view-mechanic" class="cursor-pointer">MEET THE MECHANICS</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
-        <button class="bg-yellow-400 text-black font-bold px-3 md:px-4 py-2 rounded flex items-center gap-2 w-full md:w-auto">
-          <i class="fa fa-shopping-cart"></i> <span class="hidden sm:inline">SHOP YOUR PARTS</span>
-        </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" v-model="search" placeholder="Search..." />
-        <!-- Added Cart Icon -->
         <CartIcon />
-        <i class="fa fa-user-circle text-2xl" @click="showLogoutModal = true"></i>
+        <!-- replaced icon with ProfileMenu like Accessories -->
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 
@@ -99,9 +97,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import CartIcon from '../components/CartIcon.vue'  // Added
+import CartIcon from '../components/CartIcon.vue'
+import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 const search = ref('')
 const parts = ref([])
@@ -118,20 +118,20 @@ const maxQty = computed(() => {
   return typeof q === 'number' && q > 0 ? q : 9999
 })
 
-function getImageUrl(url) {
+function getImageUrl(url) {                          // updated
   if (!url) return 'https://via.placeholder.com/100x100?text=No+Image'
-  return url.startsWith('/uploads')
-    ? `http://localhost:5000${url}`
-    : url
+  const n = String(url).replace(/\\/g, '/')
+  if (/^https?:\/\//i.test(n)) return n
+  return `${API}${n.startsWith('/') ? '' : '/'}${n}`
 }
 
-async function fetchParts() {
+async function fetchParts() {                         // updated
   try {
-    const res = await fetch('http://localhost:5000/api/inventory?category=parts')
+    const res = await fetch(`${API}/api/inventory?category=parts`)
     if (!res.ok) throw new Error('Failed to fetch parts')
     parts.value = await res.json()
   } catch (err) {
-    // Optionally show notification
+    // optional notify
   }
 }
 

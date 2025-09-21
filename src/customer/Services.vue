@@ -13,14 +13,13 @@
         <router-link to="/tires" class="hidden md:inline cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="hidden md:inline cursor-pointer">ACCESSORIES</router-link>
         <span class="hidden md:inline text-yellow-400 font-bold cursor-pointer">SERVICES</span>
+        <router-link to="/view-mechanic" class="hidden md:inline cursor-pointer">MEET THE MECHANICS</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>
       <div class="flex items-center gap-3 mt-2 md:mt-0">
-        <button class="bg-yellow-400 text-black font-bold px-4 py-2 rounded flex items-center gap-2">
-          <i class="fa fa-shopping-cart"></i> SHOP YOUR PARTS
-        </button>
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
+        <CartIcon />                                    <!-- added like Accessories -->
+        <ProfileMenu @logout="showLogoutModal = true" /><!-- added like Accessories -->
       </div>
     </header>
 
@@ -94,8 +93,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import CartIcon from '../components/CartIcon.vue'       // added
+import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 onMounted(() => {
   if (!localStorage.getItem('token')) {
@@ -134,15 +136,14 @@ const mechanicLoading = ref(false)
 const availableMechanics = ref([])
 const selectedMechanic = ref('')
 
-async function fetchMechanicAvailability(serviceTitle) {
+async function fetchMechanicAvailability() {            // updated
   mechanicLoading.value = true
   availableMechanics.value = []
   selectedMechanic.value = ''
   try {
-    // Send the service as a query parameter!
-    const res = await fetch(`http://localhost:5000/api/mechanics`)
+    const res = await fetch(`${API}/api/mechanics`)
     const data = await res.json()
-    availableMechanics.value = Array.isArray(data.mechanics) ? data.mechanics : []
+    availableMechanics.value = Array.isArray(data.mechanics) ? data.mechanics : (Array.isArray(data) ? data : [])
   } catch (e) {
     availableMechanics.value = []
   } finally {
@@ -162,22 +163,17 @@ function closeModal() {
   mechanicAvailable.value = null
 }
 
-async function submitModel() {
+async function submitModel() {                          // updated
   if (vehicleModel.value.trim() && selectedMechanic.value) {
     const user_id = localStorage.getItem('user_id')
     const name = localStorage.getItem('name')
-    if (!user_id) {
-      alert('You must be logged in to book a service.')
-      return
-    }
+    if (!user_id) { alert('You must be logged in to book a service.'); return }
     try {
-      const response = await fetch('http://localhost:5000/api/bookings', {
+      const response = await fetch(`${API}/api/bookings`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: Number(user_id), 
+          user_id: Number(user_id),
           name,
           vehicle_model: vehicleModel.value,
           service_requested: selectedService.value.title,

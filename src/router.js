@@ -20,6 +20,8 @@ import customerCloseShop from './customer/customerCloseShop.vue'
 import ViewMechanic from './customer/ViewMechanic.vue'
 import BillsPayments from './customer/BillsPayments.vue'
 import Payment from './customer/Payment.vue'
+import CustomerPayment from './admin/CustomerPayment.vue'
+import TrackStatus from './customer/TrackStatus.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -42,7 +44,9 @@ const routes = [
   { path: '/customer-close-shop', name: 'customerCloseShop', component: customerCloseShop },
   { path: '/view-mechanic', name: 'ViewMechanic', component: ViewMechanic },
   { path: '/bills', name: 'BillsPayments', component: BillsPayments },
-  { path: '/payment', name: 'Payment', component: Payment }
+  { path: '/payment', name: 'Payment', component: Payment },
+  { path: '/customer-payment', name: 'CustomerPayment', component: CustomerPayment },
+  { path: '/track-status', name: 'TrackStatus', component: TrackStatus }
 
 ]
 
@@ -64,6 +68,10 @@ router.beforeEach((to, from, next) => {
     '/tires',
     '/user-homepage',
     '/pending-approval',
+    '/view-mechanic',
+    '/bills',
+    '/payment',
+    '/track-status'
   ]
   // Admin protected routes
   const adminRoutes = [

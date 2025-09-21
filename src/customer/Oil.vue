@@ -14,16 +14,15 @@
         <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
+        <router-link to="/view-mechanic" class="cursor-pointer">MEET THE MECHANICS</router-link>
         <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
       </div>
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
-        <button class="bg-yellow-400 text-black font-bold px-3 md:px-4 py-2 rounded flex items-center gap-2 w-full md:w-auto">
-          <i class="fa fa-shopping-cart"></i> <span class="hidden sm:inline">SHOP YOUR OIL</span>
-        </button>
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" v-model="search" placeholder="Search..." />
         <!-- Add Cart Icon like Accessories -->
         <CartIcon />
-        <i class="fa fa-user-circle text-2xl cursor-pointer" @click="showLogoutModal = true"></i>
+        <!-- replaced user icon with dropdown to match Accessories.vue -->
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 
@@ -110,8 +109,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
+import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 const search = ref('')
 const oilProducts = ref([])
@@ -137,7 +138,7 @@ function getImageUrl(url) {
 
 async function fetchOil() {
   try {
-    const res = await fetch('http://localhost:5000/api/inventory?category=oil')
+    const res = await fetch(`${API}/api/inventory?category=oil`) // use API base like Accessories
     if (!res.ok) throw new Error('Failed to fetch oil')
     oilProducts.value = await res.json()
   } catch (err) {
