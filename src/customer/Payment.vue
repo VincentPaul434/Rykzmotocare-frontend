@@ -1,8 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-100 p-4 md:p-6">
     <div class="max-w-2xl mx-auto bg-white rounded shadow p-5">
-      <h1 class="text-xl font-bold mb-4">Pay for Order #{{ orderId }}</h1>
+      <h1 class="text-xl font-bold mb-4">
+        Pay for {{ mode === 'service' ? `Booking #${bookingId || '-'}` : `Order #${orderId || '-'}` }}
+      </h1>
 
+      <!-- Step 1: choose method -->
       <div v-if="step === 'choose'">
         <p class="mb-3 text-gray-600">Choose a payment method:</p>
         <div class="grid gap-2">
@@ -17,53 +20,68 @@
           </label>
         </div>
         <div class="mt-4 flex gap-2">
-          <button class="px-4 py-2 border rounded" @click="goBack">Back</button>
-          <button class="px-4 py-2 bg-black text-white rounded disabled:opacity-60"
-                  :disabled="!method || loading"
-                  @click="startPayment">
+          <button class="px-4 py-2 border rounded" @click="router.back()">Back</button>
+          <button
+            class="px-4 py-2 bg-black text-white rounded disabled:opacity-60"
+            :disabled="!method || loading"
+            @click="startPayment"
+          >
             {{ loading ? 'Starting…' : 'Continue' }}
           </button>
         </div>
         <p v-if="error" class="text-red-600 mt-3">{{ error }}</p>
       </div>
 
+      <!-- Step 2: show instructions and upload -->
       <div v-else-if="step === 'instructions'">
         <div class="space-y-1">
           <div class="text-sm text-gray-500">Reference</div>
-          <div class="font-mono">{{ info.payment_ref }}</div>
+          <div class="font-mono">{{ payment.payment_ref }}</div>
+          <div class="text-sm text-gray-500 mt-2">Amount</div>
+          <div class="font-semibold">₱{{ Number(payment.amount || 0).toFixed(2) }}</div>
         </div>
-        <p class="mt-3">{{ info.instructions }}</p>
+        <p class="mt-3">{{ payment.instructions?.note || 'Send payment using the details below, then upload the receipt.' }}</p>
 
-        <div v-if="info.method === 'gcash'" class="mt-3 text-sm">
-          <div>Account: <span class="font-semibold">{{ info.gcash_name }}</span></div>
-          <div>Number: <span class="font-semibold">{{ info.gcash_number }}</span></div>
-          <img v-if="info.qr_url" :src="resolve(info.qr_url)" alt="GCash QR" class="mt-2 w-40 border rounded" />
+        <!-- GCash -->
+        <div v-if="payment.method === 'gcash'" class="mt-3 text-sm">
+          <div>Number: <span class="font-semibold">{{ payment.instructions.number }}</span></div>
+          <div>Name: <span class="font-semibold">{{ payment.instructions.name }}</span></div>
+          <img
+            v-if="payment.instructions.qr_url"
+            :src="resolve(payment.instructions.qr_url)"
+            alt="GCash QR"
+            class="w-48 h-48 object-contain mt-2 border rounded"
+          />
         </div>
 
-        <div v-else-if="info.method === 'bdo'" class="mt-3 text-sm">
-          <div>Name: <span class="font-semibold">{{ info.bdo_account_name }}</span></div>
-          <div>Account #: <span class="font-semibold">{{ info.bdo_account_number }}</span></div>
-          <div>Branch: <span class="font-semibold">{{ info.bdo_branch }}</span></div>
+        <!-- BDO -->
+        <div v-else-if="payment.method === 'bdo'" class="mt-3 text-sm">
+          <div>Account: <span class="font-semibold">{{ payment.instructions.account_name }}</span></div>
+          <div>Number: <span class="font-semibold">{{ payment.instructions.account_number }}</span></div>
+          <div>Branch: <span class="font-semibold">{{ payment.instructions.branch }}</span></div>
         </div>
 
-        <div v-else-if="info.method === 'paymaya'" class="mt-3 text-sm">
-          <div>Name: <span class="font-semibold">{{ info.maya_name }}</span></div>
-          <div>Number: <span class="font-semibold">{{ info.maya_number }}</span></div>
+        <!-- PayMaya -->
+        <div v-else-if="payment.method === 'paymaya'" class="mt-3 text-sm">
+          <div>Number: <span class="font-semibold">{{ payment.instructions.number }}</span></div>
+          <div>Name: <span class="font-semibold">{{ payment.instructions.name }}</span></div>
         </div>
 
         <div class="mt-6">
           <label class="block font-semibold mb-1">Upload payment receipt</label>
-          <input type="file" accept="image/*" @change="onFile" />
+          <input type="file" accept="image/*" @change="onFileChange" />
           <div class="mt-3 flex gap-2">
             <button class="px-4 py-2 border rounded" @click="step='choose'">Change method</button>
-            <button class="px-4 py-2 bg-yellow-400 rounded font-bold disabled:opacity-60"
-                    :disabled="!file || loading"
-                    @click="uploadReceipt">
-              {{ loading ? 'Uploading…' : 'Submit Receipt' }}
+            <button
+              class="px-4 py-2 bg-yellow-400 rounded font-bold disabled:opacity-60"
+              :disabled="!file || submitting"
+              @click="submitReceipt"
+            >
+              {{ submitting ? 'Uploading…' : 'Submit Receipt' }}
             </button>
           </div>
           <p v-if="error" class="text-red-600 mt-3">{{ error }}</p>
-          <p v-if="success" class="text-green-700 mt-3">Receipt submitted. Order marked Paid.</p>
+          <p v-if="success" class="text-green-700 mt-3">Receipt submitted. Thank you!</p>
         </div>
       </div>
     </div>
@@ -77,35 +95,93 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const route = useRoute()
 const router = useRouter()
-const orderId = ref(route.query.orderId || '')
-const userId = ref(localStorage.getItem('user_id') || '')
+
+const mode = ref(route.query.type === 'service' ? 'service' : 'order') // 'order' | 'service'
+const orderId = ref(String(route.query.orderId || ''))
+const bookingId = ref(String(route.query.bookingId || ''))
+const currentUserId = ref(String(localStorage.getItem('user_id') || '0'))
+
 const method = ref('')
 const step = ref('choose')
 const loading = ref(false)
+const submitting = ref(false)
 const error = ref('')
 const success = ref(false)
-const info = ref({})
 const file = ref(null)
+
+const payment = ref({
+  method: '',
+  payment_ref: '',
+  amount: 0,
+  instructions: {},
+  order_id: '',
+  booking_id: ''
+})
 
 function resolve(u) {
   if (!u) return ''
   const n = String(u).replace(/\\/g, '/')
-  if (/^https?:\/\//i.test(n)) return n
-  return `${API}${n.startsWith('/') ? '' : '/'}${n}`
+  return /^https?:\/\//i.test(n) ? n : `${API}${n.startsWith('/') ? '' : '/'}${n}`
 }
-function goBack() { router.back() }
-function onFile(e) { file.value = e.target?.files?.[0] || null }
+
+function onFileChange(e) {
+  file.value = e.target?.files?.[0] || null
+}
 
 async function startPayment() {
-  loading.value = true; error.value = ''; success.value = false
+  loading.value = true
+  error.value = ''
+  success.value = false
   try {
+    const body = {
+      method: method.value,
+      user_id: Number(currentUserId.value) || 0,
+      ...(mode.value === 'service'
+        ? { booking_id: Number(bookingId.value), kind: 'service' }
+        : { order_id: Number(orderId.value), kind: 'order' })
+    }
     const res = await fetch(`${API}/api/payments/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: Number(orderId.value), user_id: Number(userId.value), method: method.value })
+      body: JSON.stringify(body)
     })
     if (!res.ok) throw new Error(await res.text())
-    info.value = await res.json()
+    const data = await res.json()
+
+    // NEW: handle nested instructions object or flat fields
+    const instrData = (data && typeof data.instructions === 'object' && data.instructions) ? data.instructions : {}
+    const m = method.value || data.method || ''
+    const instr =
+      m === 'gcash'
+        ? {
+            number: instrData.number ?? data.gcash_number ?? data.number ?? '',
+            name: instrData.name ?? data.gcash_name ?? data.name ?? '',
+            qr_url: instrData.qr_url ?? data.qr_url ?? ''
+          }
+        : m === 'bdo'
+        ? {
+            account_name: instrData.account_name ?? data.bdo_account_name ?? data.account_name ?? '',
+            account_number: instrData.account_number ?? data.bdo_account_number ?? data.account_number ?? '',
+            branch: instrData.branch ?? data.bdo_branch ?? data.branch ?? ''
+          }
+        : {
+            number: instrData.number ?? data.maya_number ?? data.number ?? '',
+            name: instrData.name ?? data.maya_name ?? data.name ?? ''
+          }
+
+    const noteValue = typeof data.instructions === 'string'
+      ? data.instructions
+      : (instrData.note ?? instrData.message ?? '')
+
+    payment.value = {
+      method: m,
+      payment_ref: data.payment_ref || '',
+      amount: Number(data.amount ?? data.total_amount ?? 0),
+      instructions: { ...instr, note: noteValue },
+      order_id: mode.value === 'order' ? (data.order_id ?? orderId.value) : '',
+      booking_id: mode.value === 'service' ? (data.booking_id ?? bookingId.value) : ''
+    }
+
     step.value = 'instructions'
   } catch (e) {
     error.value = 'Failed to start payment.'
@@ -114,24 +190,32 @@ async function startPayment() {
   }
 }
 
-async function uploadReceipt() {
+async function submitReceipt() {
   if (!file.value) return
-  loading.value = true; error.value = ''; success.value = false
+  submitting.value = true
+  error.value = ''
+  success.value = false
   try {
     const fd = new FormData()
-    fd.append('order_id', orderId.value)
-    fd.append('user_id', userId.value)
+    if (mode.value === 'order') fd.append('order_id', String(payment.value.order_id || orderId.value))
+    else fd.append('booking_id', String(payment.value.booking_id || bookingId.value))
+    fd.append('user_id', String(currentUserId.value || '0'))
     fd.append('receipt', file.value)
-    const res = await fetch(`${API}/api/payments/receipt`, { method: 'POST', body: fd })
+
+    // As requested, post to /api/payments/upload
+    const res = await fetch(`${API}/api/payments/upload`, { method: 'POST', body: fd })
     if (!res.ok) throw new Error(await res.text())
     await res.json()
+
     success.value = true
-    // Redirect to Bills after a moment
-    setTimeout(() => router.push('/purchases'), 1000)
+    setTimeout(() => {
+      router.push(mode.value === 'order' ? '/purchases' : '/customer-bills')
+    }, 800)
   } catch (e) {
-    error.value = 'Failed to upload receipt.'
+    console.error(e)
+    error.value = 'Failed to submit receipt'
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 </script>

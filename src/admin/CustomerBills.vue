@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 const customerId = ref('')
 const customerName = ref('')
@@ -149,19 +149,33 @@ async function sendNotification() {
   }
 }
 
+function formatAmount(val) {
+  const n = Number(val)
+  if (Number.isNaN(n)) return ''
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Keep message in sync with amountDue
+function updateMessageFromAmount() {
+  if (!amountDue.value && amountDue.value !== 0) return
+  const amt = formatAmount(amountDue.value)
+  message.value = `Your payment of ${amt} is now due.\nKindly pay before the service is completed.`
+}
+
+// Update message whenever amount changes (typed or set from booking)
+watch(amountDue, () => updateMessageFromAmount())
+
+// When selecting a booking, also refresh the message based on the amount
 function selectBooking(booking) {
   if (booking) {
-    customerId.value = booking.user_id         // <-- use user_id
+    customerId.value = booking.user_id
     customerName.value = booking.name
     bookingId.value = booking.booking_id
     serviceAvailed.value = booking.service_requested
-    // Only set these if your backend provides them:
     amountDue.value = booking.amount_due || ''
     dueDate.value = booking.due_date || ''
     paymentStatus.value = booking.book_status === 'Paid' ? 'Paid' : 'Unpaid'
-    message.value = amountDue.value
-      ? `Your payment of ${amountDue.value} is now due.\nKindly pay before the service is completed.`
-      : 'Your payment is now due.\nKindly pay before the service is completed.'
+    updateMessageFromAmount()
   } else {
     resetForm()
   }
