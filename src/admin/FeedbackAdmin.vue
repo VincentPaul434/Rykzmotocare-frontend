@@ -52,6 +52,7 @@
               <th class="text-left py-2 px-2 md:px-4 font-semibold">FeedBack Message:</th>
               <th class="text-left py-2 px-2 md:px-4 font-semibold">Ratings:</th>
               <th class="text-left py-2 px-2 md:px-4 font-semibold">Date Submited:</th>
+              <th class="text-left py-2 px-2 md:px-4 font-semibold">Admin Reply:</th>
               <th class="text-left py-2 px-2 md:px-4 font-semibold">Actions:</th>
             </tr>
           </thead>
@@ -75,6 +76,9 @@
                 >★</span>
               </td>
               <td class="py-3 px-2 md:px-4">{{ fb.date }}</td>
+              <td class="py-3 px-2 md:px-4">
+                <div class="max-w-[34ch] text-green-700">{{ fb.admin_reply }}</div>
+              </td>
               <td class="py-3 px-2 md:px-4 text-right md:text-left">
                 <span class="text-gray-800 font-semibold">[View Details]</span>
               </td>
@@ -90,16 +94,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const feedbacks = ref([
-  {
-    id: 'fb-0001',
-    name: 'John Doe',
-    bookingId: '0001',
-    message: 'Service was fast and professional!',
-    rating: 4,
-    date: 'April 26, 2025'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const feedbacks = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API}/api/feedbacks`)
+    if (!res.ok) throw new Error('Failed to fetch feedbacks')
+    feedbacks.value = await res.json()
+  } catch (err) {
+    feedbacks.value = []
+    // Optionally show error
   }
-])
+})
 </script>

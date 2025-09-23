@@ -22,6 +22,7 @@ import BillsPayments from './customer/BillsPayments.vue'
 import Payment from './customer/Payment.vue'
 import CustomerPayment from './admin/CustomerPayment.vue'
 import TrackStatus from './customer/TrackStatus.vue'
+import Feedback from './customer/Feedback.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -46,7 +47,8 @@ const routes = [
   { path: '/bills', name: 'BillsPayments', component: BillsPayments },
   { path: '/payment', name: 'Payment', component: Payment },
   { path: '/customer-payment', name: 'CustomerPayment', component: CustomerPayment },
-  { path: '/track-status', name: 'TrackStatus', component: TrackStatus }
+  { path: '/track-status', name: 'TrackStatus', component: TrackStatus },
+  { path: '/feedback', name: 'Feedback', component: Feedback }
 
 ]
 

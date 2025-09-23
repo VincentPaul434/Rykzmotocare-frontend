@@ -91,6 +91,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { clearCart } from '../utils/cart'
+
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const route = useRoute()
@@ -202,15 +204,18 @@ async function submitReceipt() {
     fd.append('user_id', String(currentUserId.value || '0'))
     fd.append('receipt', file.value)
 
-    // As requested, post to /api/payments/upload
     const res = await fetch(`${API}/api/payments/upload`, { method: 'POST', body: fd })
     if (!res.ok) throw new Error(await res.text())
     await res.json()
 
+    // Clear the user's cart and notify listeners
+    clearCart(currentUserId.value)
+    window.dispatchEvent(new Event('cart:clear'))
+
     success.value = true
     setTimeout(() => {
       router.push(mode.value === 'order' ? '/purchases' : '/customer-bills')
-    }, 800)
+    }, 600)
   } catch (e) {
     console.error(e)
     error.value = 'Failed to submit receipt'

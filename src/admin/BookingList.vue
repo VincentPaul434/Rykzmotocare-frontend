@@ -46,7 +46,13 @@
             <td class="border px-4 py-2">{{ booking.service_requested }}</td>
             <td class="border px-4 py-2">{{ booking.book_status }}</td>
             <td class="border px-4 py-2">
-              <button class="text-blue-600 mr-2" @click="openModal(idx)">Update</button>|
+              <button
+                class="text-blue-600 mr-2 disabled:text-gray-400 disabled:cursor-not-allowed"
+                :disabled="isCompleted(booking)"
+                @click="openModal(idx)"
+              >
+                Update
+              </button>|
               <button class="text-green-600 ml-2" @click="openNotifyModal(idx)">Notify</button>
             </td>
           </tr>
@@ -87,6 +93,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const bookings = ref([])
 const showModal = ref(false)
@@ -104,6 +111,10 @@ const modalStatus = ref({
 })
 const selectedStatus = ref('')
 
+function isCompleted(b) {
+  return String(b?.book_status || '').toLowerCase() === 'completed'
+}
+
 onMounted(async () => {
   try {
     const response = await fetch('http://localhost:5000/api/bookings')
@@ -116,6 +127,11 @@ onMounted(async () => {
 })
 
 function openModal(idx) {
+  const b = bookings.value[idx]
+  if (isCompleted(b)) {
+    alert('This booking is already Completed and cannot be updated.')
+    return
+  }
   selectedBookingIdx.value = idx
   const statusMap = {
     Confirmed: 'confirmed',
@@ -125,7 +141,7 @@ function openModal(idx) {
     'In progress': 'inProgress',
     'Waiting for Parts': 'waitingParts',
   }
-  selectedStatus.value = statusMap[bookings.value[idx].book_status] || ''
+  selectedStatus.value = statusMap[b.book_status] || ''
   showModal.value = true
 }
 
@@ -148,6 +164,17 @@ function closeNotifyModal() {
 }
 
 async function saveChanges() {
+  const idx = selectedBookingIdx.value
+  if (idx == null) return
+  const booking = bookings.value[idx]
+
+  // Defensive guard: never update Completed bookings
+  if (isCompleted(booking)) {
+    alert('Completed bookings cannot be updated.')
+    closeModal()
+    return
+  }
+
   const statusMap = {
     confirmed: 'Confirmed',
     completed: 'Completed',
@@ -156,27 +183,62 @@ async function saveChanges() {
     inProgress: 'In progress',
     waitingParts: 'Waiting for Parts',
   }
-  if (selectedStatus.value) {
-    const booking = bookings.value[selectedBookingIdx.value]
-    const newStatus = statusMap[selectedStatus.value]
-    booking.book_status = newStatus
 
-    try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${booking.booking_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ book_status: newStatus }),
-      })
-      if (!res.ok) throw new Error('Failed to update booking status')
-      alert('Booking status updated!')
-    } catch (err) {
-      alert('Could not update booking status.')
-      console.error(err)
-    }
-  } else {
+  if (!selectedStatus.value) {
     alert('Please select a status.')
+    return
+  }
+
+  const newStatus = statusMap[selectedStatus.value]
+  try {
+    const res = await fetch(`${API}/api/bookings/${booking.booking_id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ book_status: newStatus }),
+    })
+    if (!res.ok) throw new Error('Failed to update booking status')
+
+    booking.book_status = newStatus
+    alert('Booking status updated!')
+
+    // If Completed, create/ensure a feedback request and notify the customer (only once)
+    if (newStatus === 'Completed') {
+      await triggerFeedbackRequest(booking)
+    }
+  } catch (err) {
+    alert('Could not update booking status.')
+    console.error(err)
   }
   closeModal()
+}
+
+// Create feedback request (idempotent) and notify the user with the link
+async function triggerFeedbackRequest(booking) {
+  try {
+    const r = await fetch(`${API}/api/feedback/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        booking_id: booking.booking_id,
+        user_id: booking.user_id,
+      }),
+    })
+    if (!r.ok) throw new Error(await r.text())
+    const data = await r.json() // { token, url, created, alreadySubmitted }
+    // Send notification with link
+    await fetch(`${API}/api/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: booking.user_id,
+        type: 'feedback',
+        message: `Your service is completed. Please share feedback: ${data.url}`,
+        booking_id: booking.booking_id
+      }),
+    }).catch(() => {})
+  } catch (e) {
+    console.error('feedback request error', e)
+  }
 }
 
 async function sendNotification() {
