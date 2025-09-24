@@ -142,9 +142,6 @@ async function fetchTires() {                         // updated
 }
 
 onMounted(() => {
-  if (!localStorage.getItem('token')) {
-    router.push('/')
-  }
   fetchTires()
 })
 

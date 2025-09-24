@@ -64,8 +64,8 @@
               <option value="" disabled>Select a mechanic</option>
               <option
                 v-for="mech in availableMechanics.filter(m => String(m.status).toLowerCase() === 'available')"
-                :key="mech.mechanic_id"
-                :value="mech.mechanic_id"
+                :key="mech.id"
+                :value="mech.id"
               >
                 {{ mech.name }} - {{ mech.specialization }}
               </option>
@@ -92,6 +92,18 @@
           </div>
         </div>
       </div>
+
+      <!-- Login Required Modal -->
+      <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+          <h2 class="text-xl font-bold mb-4">Login Required</h2>
+          <p class="mb-6">You must be logged in to book a service.</p>
+          <div class="flex justify-end gap-2">
+            <router-link to="/customer-admin" class="bg-yellow-400 px-4 py-2 rounded font-bold">Login</router-link>
+            <button @click="showLoginModal = false" class="bg-gray-300 px-4 py-2 rounded font-bold">Cancel</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <CartDrawer />
@@ -99,7 +111,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
 import ProfileMenu from '../components/ProfileMenu.vue' // added
@@ -109,16 +121,14 @@ const router = useRouter()
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 onMounted(() => {
-  if (!localStorage.getItem('token')) {
-    router.push('/')
-  }
+  // No login check needed for browsing services
 })
 
 const services = [
   {
     title: 'Valve Tuning',
     desc: 'Wiring installation and trouble shooting.',
-    img: new URL('../assets/images/sparkplug.webp', import.meta.url).href
+    img: new URL('../assets/images/sparkplug.webp', import.meta.url).href || 'https://placehold.co/256x180?text=No+Image'
   },
   {
     title: 'Change Oil',
@@ -140,10 +150,11 @@ const services = [
 const selectedService = ref(null)
 const vehicleModel = ref('')
 const showLogoutModal = ref(false)
+const showLoginModal = ref(false) // added
 const mechanicAvailable = ref(null)
 const mechanicLoading = ref(false)
 const availableMechanics = ref([])
-const selectedMechanic = ref('')
+const selectedMechanic = ref('') // not undefined
 
 async function fetchMechanicAvailability() {            // updated
   mechanicLoading.value = true
@@ -172,11 +183,36 @@ function closeModal() {
   mechanicAvailable.value = null
 }
 
-async function submitModel() {                          // updated
-  if (vehicleModel.value.trim() && selectedMechanic.value) {
+async function submitModel() {
+  console.log('vehicleModel:', vehicleModel.value, 'selectedMechanic:', selectedMechanic.value)
+  if (vehicleModel.value.trim() && selectedMechanic.value !== '' && selectedMechanic.value !== undefined) {
     const user_id = localStorage.getItem('user_id')
     const name = localStorage.getItem('name')
-    if (!user_id) { alert('You must be logged in to book a service.'); return }
+    if (!user_id) {
+      showLoginModal.value = true
+      return
+    }
+
+    // Check for active booking of the same service
+    try {
+      const res = await fetch(`${API}/api/bookings?user_id=${user_id}&service=${encodeURIComponent(selectedService.value.title)}`)
+      const bookings = await res.json()
+      const activeStatuses = ['Pending', 'Confirmed', 'In progress', 'Waiting for Parts']
+      // Only block if there is an active booking for this service
+      const hasActive = Array.isArray(bookings) && bookings.some(b =>
+        b.service_requested === selectedService.value.title &&
+        b.user_id == user_id &&
+        activeStatuses.map(s => s.toLowerCase()).includes(String(b.book_status).toLowerCase())
+      )
+      if (hasActive) {
+        alert('You already have an active booking for this service.')
+        return
+      }
+    } catch (e) {
+      // If error, allow booking (fail open)
+    }
+
+    // Proceed with booking
     try {
       const response = await fetch(`${API}/api/bookings`, {
         method: 'POST',
@@ -207,4 +243,14 @@ function handleLogout() {
   localStorage.removeItem('name')
   router.push('/')
 }
+
+function getImageUrl(url) {
+  if (!url) return 'https://placehold.co/256x180?text=No+Image'
+  if (/^https?:\/\//.test(url)) return url
+  return API + url
+}
+
+watch(selectedMechanic, (val) => {
+  console.log('Selected mechanic:', val)
+})
 </script>

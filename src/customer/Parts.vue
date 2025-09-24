@@ -140,9 +140,6 @@ async function fetchParts() {                         // updated
 }
 
 onMounted(() => {
-  if (!localStorage.getItem('token')) {
-    router.push('/')
-  }
   fetchParts()
 })
 

@@ -82,6 +82,18 @@
         See full cart to enter promo codes and gift options.
       </button>
     </div>
+
+    <!-- Login Modal -->
+    <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[200]">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+        <h2 class="text-xl font-bold mb-4">Login Required</h2>
+        <p class="mb-6">You must be logged in to checkout.</p>
+        <div class="flex justify-end gap-2">
+          <router-link to="/customer-admin" class="bg-yellow-400 px-4 py-2 rounded font-bold">Login</router-link>
+          <button @click="showLoginModal = false" class="bg-gray-300 px-4 py-2 rounded font-bold">Cancel</button>
+        </div>
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -93,6 +105,7 @@ const router = useRouter()
 const open = ref(false)
 const items = ref([])
 const checkingOut = ref(false) // added
+const showLoginModal = ref(false) // added
 const PLACEHOLDER = 'https://via.placeholder.com/64?text=Item'
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
@@ -205,8 +218,8 @@ async function proceedToCheckout() {
 
     const user_id = Number(localStorage.getItem('user_id') || 0)
     if (!user_id) {
-      alert('Please sign in before checkout.')
-      router.push('/')
+      showLoginModal.value = true
+      checkingOut.value = false
       return
     }
 

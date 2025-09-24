@@ -35,11 +35,11 @@ const routes = [
   { path: '/mechanic-admin', name: 'MechanicAdmin', component: MechanicAdmin },
   { path: '/pending-approval', name: 'PendingApproval', component: PendingApproval },
   { path: '/user-homepage', name: 'UserHomepage', component: UserHomepage },
-  { path : '/services', name: 'Services', component: Services },
+  { path: '/services', name: 'Services', component: Services },
   { path: '/booking-list', name: 'BookingList', component: BookingList },
   { path: '/customer-bills', name: 'CustomerBills', component: CustomerBills },
-  { path: '/accessories', name: 'Accessories', component: Accessories },
   { path: '/parts', name: 'CustomerParts', component: CustomerParts },
+  { path: '/accessories', name: 'Accessories', component: Accessories },
   { path: '/oil', name: 'Oil', component: Oil },
   { path: '/tires', name: 'Tires', component: Tires },
   { path: '/close-shop', name: 'closeShop', component: closeShop },
@@ -74,6 +74,7 @@ router.beforeEach((to, from, next) => {
     '/track-status',
     '/feedback',
     '/my-booking',
+    '/parts'
   ]
   // Admin protected routes
   const adminRoutes = [
