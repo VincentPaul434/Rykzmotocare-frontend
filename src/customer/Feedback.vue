@@ -1,5 +1,11 @@
 <template>
   <div class="max-w-lg mx-auto p-6">
+    <button
+      class="mb-4 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+      @click="$router.push('/user-homepage')"
+    >
+      ← Back to Homepage
+    </button>
     <h2 class="text-2xl font-bold mb-6 text-yellow-600 flex items-center gap-2">
       <span class="inline-block bg-yellow-100 rounded-full p-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.764 7.528A2 2 0 0115 22H9a2 2 0 01-1.789-1.106l-3.764-7.528A2 2 0 013.236 10H8m6 0V6a2 2 0 10-4 0v4m4 0H8" /></svg>

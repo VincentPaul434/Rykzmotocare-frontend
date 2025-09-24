@@ -24,6 +24,7 @@ import CustomerPayment from './admin/CustomerPayment.vue'
 import TrackStatus from './customer/TrackStatus.vue'
 import Feedback from './customer/Feedback.vue'
 import Mybookings from './customer/Mybookings.vue'
+import SuccessfullyPurchased from './customer/SuccessfullyPurchased.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -51,6 +52,7 @@ const routes = [
   { path: '/track-status', name: 'TrackStatus', component: TrackStatus },
   { path: '/feedback', name: 'Feedback', component: Feedback },
   { path: '/my-booking', name: 'Mybookings', component: Mybookings },
+  { path: '/successfully-purchased', name: 'SuccessfullyPurchased', component: SuccessfullyPurchased }
 
 ]
 

@@ -1,5 +1,11 @@
 <template>
   <section class="max-w-2xl mx-auto mt-12">
+    <button
+      class="mb-6 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+      @click="$router.push('/user-homepage')"
+    >
+      ← Back to Homepage
+    </button>
     <h2 class="text-xl font-bold mb-4">My Bookings</h2>
     <div v-if="bookingsLoading" class="text-gray-500">Loading bookings…</div>
     <div v-else-if="userBookings.length === 0" class="text-gray-500">No bookings yet.</div>

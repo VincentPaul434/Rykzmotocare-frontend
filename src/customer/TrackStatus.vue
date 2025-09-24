@@ -1,5 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-100 p-4 md:p-6">
+    <button
+      class="mb-4 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+      @click="$router.push('/user-homepage')"
+    >
+      ← Back to Homepage
+    </button>
     <div class="max-w-4xl mx-auto bg-white rounded shadow p-5">
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-xl font-bold">Track Status</h1>

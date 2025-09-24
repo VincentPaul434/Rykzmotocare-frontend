@@ -214,7 +214,7 @@ async function submitReceipt() {
 
     success.value = true
     setTimeout(() => {
-      router.push(mode.value === 'order' ? '/purchases' : '/customer-bills')
+      router.push(mode.value === 'order' ? '/successfully-purchased' : '/customer-bills')
     }, 600)
   } catch (e) {
     console.error(e)
