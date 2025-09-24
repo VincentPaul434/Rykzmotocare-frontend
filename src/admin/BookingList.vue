@@ -40,7 +40,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(booking, idx) in bookings" :key="idx">
+          <tr v-for="(booking, idx) in pagedBookings" :key="idx">
             <td class="border px-4 py-2">{{ booking.name }}</td>
             <td class="border px-4 py-2">{{ booking.vehicle_model }}</td>
             <td class="border px-4 py-2">{{ booking.service_requested }}</td>
@@ -48,16 +48,29 @@
             <td class="border px-4 py-2">
               <button
                 class="text-blue-600 mr-2 disabled:text-gray-400 disabled:cursor-not-allowed"
-                :disabled="isCompleted(booking)"
-                @click="openModal(idx)"
+                :disabled="isCompletedOrCancelledOrDeclined(booking)"
+                @click="openModal(idx + page * pageSize)"
               >
                 Update
               </button>|
-              <button class="text-green-600 ml-2" @click="openNotifyModal(idx)">Notify</button>
+              <button class="text-green-600 ml-2" @click="openNotifyModal(idx + page * pageSize)">Notify</button>
             </td>
           </tr>
         </tbody>
       </table>
+      <div class="flex justify-end items-center mt-4 gap-2">
+        <button
+          class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          :disabled="page === 0"
+          @click="prevPage"
+        >Previous</button>
+        <span class="mx-2">Page {{ page + 1 }}</span>
+        <button
+          class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          :disabled="(page + 1) * pageSize >= bookings.length"
+          @click="nextPage"
+        >Next</button>
+      </div>
       <!-- Vehicle Progress Modal -->
       <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
         <div class="bg-gray-200 rounded-lg p-6 relative w-80">
@@ -92,10 +105,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const bookings = ref([])
+const page = ref(0)
+const pageSize = 10
 const showModal = ref(false)
 const showNotifyModal = ref(false)
 const notifyMessage = ref('')
@@ -110,6 +125,22 @@ const modalStatus = ref({
   waitingParts: false,
 })
 const selectedStatus = ref('')
+
+const pagedBookings = computed(() =>
+  bookings.value.slice(page.value * pageSize, (page.value + 1) * pageSize)
+)
+
+function nextPage() {
+  if ((page.value + 1) * pageSize < bookings.value.length) page.value++
+}
+function prevPage() {
+  if (page.value > 0) page.value--
+}
+
+function isCompletedOrCancelledOrDeclined(b) {
+  const status = String(b?.book_status || '').toLowerCase()
+  return status === 'completed' || status === 'cancelled' || status === 'declined'
+}
 
 function isCompleted(b) {
   return String(b?.book_status || '').toLowerCase() === 'completed'
@@ -128,8 +159,8 @@ onMounted(async () => {
 
 function openModal(idx) {
   const b = bookings.value[idx]
-  if (isCompleted(b)) {
-    alert('This booking is already Completed and cannot be updated.')
+  if (isCompletedOrCancelledOrDeclined(b)) {
+    alert('This booking is already Completed, Cancelled, or Declined and cannot be updated.')
     return
   }
   selectedBookingIdx.value = idx
@@ -168,9 +199,9 @@ async function saveChanges() {
   if (idx == null) return
   const booking = bookings.value[idx]
 
-  // Defensive guard: never update Completed bookings
-  if (isCompleted(booking)) {
-    alert('Completed bookings cannot be updated.')
+  // Defensive guard: never update Completed, Cancelled, or Declined bookings
+  if (isCompletedOrCancelledOrDeclined(booking)) {
+    alert('Completed, Cancelled, or Declined bookings cannot be updated.')
     closeModal()
     return
   }

@@ -102,6 +102,8 @@
         </div>
       </div>
     </div>
+
+    <CartDrawer />
   </div>
 </template>
 
@@ -110,6 +112,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
 import ProfileMenu from '../components/ProfileMenu.vue' // added
+import CartDrawer from '../components/CartDrawer.vue'
 
 const router = useRouter()
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added

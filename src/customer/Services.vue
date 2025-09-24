@@ -18,8 +18,8 @@
       </div>
       <div class="flex items-center gap-3 mt-2 md:mt-0">
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <CartIcon />                                    <!-- added like Accessories -->
-        <ProfileMenu @logout="showLogoutModal = true" /><!-- added like Accessories -->
+        <CartIcon />
+        <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
 
@@ -62,11 +62,17 @@
               class="w-full border rounded px-3 py-2 mt-2"
             >
               <option value="" disabled>Select a mechanic</option>
-              <option v-for="mech in availableMechanics" :key="mech.id" :value="mech.id">
-                {{ mech.name }}
+              <option
+                v-for="mech in availableMechanics.filter(m => String(m.status).toLowerCase() === 'available')"
+                :key="mech.mechanic_id"
+                :value="mech.mechanic_id"
+              >
+                {{ mech.name }} - {{ mech.specialization }}
               </option>
             </select>
-            <div v-if="!mechanicLoading && availableMechanics.length === 0" class="text-red-600 mt-2">No mechanics available</div>
+            <div v-if="!mechanicLoading && availableMechanics.filter(m => String(m.status).toLowerCase() === 'available').length === 0" class="text-red-600 mt-2">
+              No mechanics available
+            </div>
           </div>
           <div class="flex justify-end gap-2">
             <button @click="submitModel" class="bg-yellow-400 px-4 py-2 rounded font-bold">Submit</button>
@@ -87,14 +93,17 @@
         </div>
       </div>
     </section>
+
+    <CartDrawer />
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import CartIcon from '../components/CartIcon.vue'       // added
+import CartIcon from '../components/CartIcon.vue'
 import ProfileMenu from '../components/ProfileMenu.vue' // added
+import CartDrawer from '../components/CartDrawer.vue'
 
 const router = useRouter()
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added

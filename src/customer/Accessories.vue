@@ -17,7 +17,6 @@
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
         <CartIcon />
-        <!-- replace icon with dropdown -->
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
@@ -108,6 +107,8 @@
     >
       {{ notification }}
     </div>
+
+    <CartDrawer />
   </div>
 </template>
 
@@ -115,6 +116,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
+import CartDrawer from '../components/CartDrawer.vue'
 import ProfileMenu from '../components/ProfileMenu.vue'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'   // added

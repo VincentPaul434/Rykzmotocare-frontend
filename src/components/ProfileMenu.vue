@@ -27,6 +27,12 @@
           <RouterLink to="/bills" class="block px-4 py-2 hover:bg-gray-100">Bills & Payments</RouterLink>
         </li>
         <li>
+          <RouterLink to="/feedback" class="block px-4 py-2 hover:bg-gray-100">Feedback</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/my-booking" class="block px-4 py-2 hover:bg-gray-100">My Bookings</RouterLink>
+        </li>
+        <li>
           <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="$emit('logout')">
             Logout
           </button>

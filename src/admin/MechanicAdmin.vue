@@ -17,7 +17,7 @@
           <a href="#" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Available Mechanics</a>
           <router-link to="/customer-bills" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Bills</router-link>
           <router-link to="/customer-payment" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Payment</router-link>
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Feedbacks</a>
+          <router-link to="/feedback-admin" class="block py-1 px-2 rounded hover: bg-gray=600">Feedback</router-link>
           <router-link to="/customer-approval" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Approval</router-link>
         </nav>
       </div>

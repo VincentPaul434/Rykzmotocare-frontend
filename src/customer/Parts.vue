@@ -20,7 +20,6 @@
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" v-model="search" placeholder="Search..." />
         <CartIcon />
-        <!-- replaced icon with ProfileMenu like Accessories -->
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
@@ -91,6 +90,8 @@
         </div>
       </div>
     </div>
+
+    <CartDrawer />
   </div>
 </template>
 
@@ -98,6 +99,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CartIcon from '../components/CartIcon.vue'
+import CartDrawer from '../components/CartDrawer.vue'
 import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()

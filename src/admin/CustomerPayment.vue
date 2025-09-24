@@ -17,7 +17,7 @@
           <router-link to="/mechanic-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Available Mechanics</router-link>
           <router-link to="/customer-bills" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Bills</router-link>
           <router-link to="/customer-payment" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Customer Payments</router-link>
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Feedbacks</a>
+          <router-link to="/feedback-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Feedback</router-link>
           <router-link to="/customer-approval" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Approval</router-link>
         </nav>
       </div>
@@ -150,7 +150,8 @@ function mapOrder(row) {
     user_id: row.user_id,
     method: row.method,
     status: row.status,
-    amount: Number(row.amount ?? row.total_amount ?? 0),
+    // Use 'amount' for orders
+    amount: Number(row.amount ?? 0),
     receipt_url: row.receipt_url,
     created_at: row.created_at
   }
@@ -164,7 +165,8 @@ function mapService(row) {
     user_id: row.user_id,
     method: row.method,
     status: row.status,
-    amount: Number(row.amount ?? 0),
+    // Use 'total_amount' for services
+    amount: Number(row.total_amount ?? 0),
     receipt_url: row.receipt_url,
     created_at: row.created_at
   }

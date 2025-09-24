@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { onMounted, ref } from 'vue';
-import ProfileMenu from '../components/ProfileMenu.vue' // added
+import ProfileMenu from '../components/ProfileMenu.vue'
+import CartIcon from '../components/CartIcon.vue'
+import CartDrawer from '../components/CartDrawer.vue'
 
 const router = useRouter();
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
@@ -60,28 +62,8 @@ function handleLogout() {
       </div>
       <div class="flex items-center gap-3 mt-2 md:mt-0">
         <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <!-- Bell Icon -->
-        <div class="relative">
-          <i
-            class="fa fa-bell text-2xl cursor-pointer"
-            @click="showNotifications = !showNotifications"
-          ></i>
-          <!-- Notification dropdown -->
-          <div
-            v-if="showNotifications"
-            class="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg z-50"
-          >
-            <div v-if="notifications.length" class="divide-y divide-gray-200">
-              <div v-for="(note, idx) in notifications" :key="idx" class="p-3 text-sm">
-                <div class="font-bold text-yellow-600" v-if="note.type">{{ note.type }}</div>
-                <div>{{ note.message }}</div>
-                <div class="text-xs text-gray-400" v-if="note.created_at">{{ new Date(note.created_at).toLocaleString() }}</div>
-              </div>
-            </div>
-            <div v-else class="p-3 text-sm text-gray-500">No notifications</div>
-          </div>
-        </div>
-        <!-- replace icon with ProfileMenu to match Accessories -->
+        <!-- Bell Icon and ProfileMenu -->
+        <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
@@ -232,5 +214,6 @@ function handleLogout() {
               </div>
             </div>
           </div>
+          <CartDrawer />
         </div>
       </template>

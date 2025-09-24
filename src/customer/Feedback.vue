@@ -152,6 +152,15 @@ async function submit() {
     })
     if (!res.ok) throw new Error(await res.text())
     done.value = true
+
+    // Refresh feedbacks so the booking disappears from the list
+    const res2 = await fetch(`${API}/api/feedbacks?user_id=${userId}`)
+    feedbacks.value = res2.ok ? await res2.json() : []
+
+    // Optionally clear selection and comment for next feedback
+    selectedBookingId.value = ''
+    comment.value = ''
+    rating.value = 5
   } catch (e) {
     error.value = e.message || 'Submit failed.'
   } finally {

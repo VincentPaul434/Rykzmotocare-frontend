@@ -23,6 +23,7 @@ import Payment from './customer/Payment.vue'
 import CustomerPayment from './admin/CustomerPayment.vue'
 import TrackStatus from './customer/TrackStatus.vue'
 import Feedback from './customer/Feedback.vue'
+import Mybookings from './customer/Mybookings.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -48,7 +49,8 @@ const routes = [
   { path: '/payment', name: 'Payment', component: Payment },
   { path: '/customer-payment', name: 'CustomerPayment', component: CustomerPayment },
   { path: '/track-status', name: 'TrackStatus', component: TrackStatus },
-  { path: '/feedback', name: 'Feedback', component: Feedback }
+  { path: '/feedback', name: 'Feedback', component: Feedback },
+  { path: '/my-booking', name: 'Mybookings', component: Mybookings },
 
 ]
 
@@ -73,7 +75,9 @@ router.beforeEach((to, from, next) => {
     '/view-mechanic',
     '/bills',
     '/payment',
-    '/track-status'
+    '/track-status',
+    '/feedback',
+    '/my-booking',
   ]
   // Admin protected routes
   const adminRoutes = [
@@ -83,7 +87,8 @@ router.beforeEach((to, from, next) => {
     '/mechanic-admin',
     '/booking-list',
     '/customer-bills',
-    '/feedback-admin'
+    '/feedback-admin',
+    '/customer-payment',
   ]
 
   if (protectedRoutes.some(path => to.path.startsWith(path))) {
