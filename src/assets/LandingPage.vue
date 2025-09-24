@@ -11,12 +11,12 @@
     </header>
     <!-- Navigation -->
     <nav class="nav">
-  <span @click="requireLogin('/parts')" style="cursor:pointer;">PARTS</span>
-  <span @click="requireLogin('/accessories')" style="cursor:pointer;">ACCESSORIES</span>
-  <span @click="requireLogin('/tires')" style="cursor:pointer;">TIRES</span>
-  <span @click="requireLogin('/oil')" style="cursor:pointer;">OIL</span>
-  <span @click="requireLogin('/services')" style="cursor:pointer;">SERVICES</span>
-  <span class="sale" @click="requireLogin('/sale')" style="cursor:pointer;">SALE</span>
+  <span @click="router.push('/parts')" style="cursor:pointer;">PARTS</span>
+  <span @click="router.push('/accessories')" style="cursor:pointer;">ACCESSORIES</span>
+  <span @click="router.push('/tires')" style="cursor:pointer;">TIRES</span>
+  <span @click="router.push('/oil')" style="cursor:pointer;">OIL</span>
+  <span @click="router.push('/services')" style="cursor:pointer;">SERVICES</span>
+  <span class="sale" @click="router.push('/sale')" style="cursor:pointer;">SALE</span>
     </nav>
     <!-- Hero Section -->
     <section

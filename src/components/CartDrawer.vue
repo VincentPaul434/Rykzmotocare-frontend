@@ -206,7 +206,7 @@ async function proceedToCheckout() {
     const user_id = Number(localStorage.getItem('user_id') || 0)
     if (!user_id) {
       alert('Please sign in before checkout.')
-      router.push('/login')
+      router.push('/')
       return
     }
 

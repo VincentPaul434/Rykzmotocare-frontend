@@ -16,10 +16,40 @@
       </div>
       <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
         <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
+        <!-- Notification Bell Icon placed beside CartIcon -->
+        <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
+          <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <!-- Optional unread count badge -->
+          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
+        </button>
         <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
+
+    <!-- Notifications dropdown, scrollable -->
+    <div
+      v-if="showNotifications"
+      class="fixed top-16 right-4 w-80 max-h-[60vh] bg-white rounded-lg shadow-lg z-50 overflow-y-auto border"
+      style="transition: box-shadow 0.2s;"
+    >
+      <div class="p-4 border-b font-bold text-lg text-yellow-700">Notifications</div>
+      <div v-if="notifications.length === 0" class="p-4 text-gray-500 text-center">No notifications.</div>
+      <ul>
+        <li
+          v-for="(notif, idx) in notifications"
+          :key="notif.id || idx"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+        >
+          <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
+          <div class="text-sm text-gray-700">{{ notif.message }}</div>
+          <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+        </li>
+      </ul>
+    </div>
 
     <section class="py-6 px-2 md:px-0">
       <h2 class="text-2xl font-bold text-center mb-4">All the Extras You Need</h2>
@@ -36,7 +66,7 @@
             class="w-full h-40 object-cover rounded-t mb-2"
           />
           <h4 class="font-bold mb-1 text-center">{{ item.name }}</h4>
-          <p class="text-sm text-center mb-1">{{ item.brand }}</p>
+          <p class="text-sm text-center mb-1">Brand: {{ item.brand }}</p>
           <p class="text-sm text-center mb-1">Stock: {{ item.quantity }}</p>
           <p class="text-green-600 font-bold mb-2">PHP{{ item.price }}</p>
           <!-- Add to Cart -->
@@ -119,7 +149,29 @@ import CartIcon from '../components/CartIcon.vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import ProfileMenu from '../components/ProfileMenu.vue'
 
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'   // added
+const showNotifications = ref(false)
+const notifications = ref([])
+const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+
+onMounted(async () => {
+  try {
+    const user_id = localStorage.getItem('user_id')
+    // Use /api/notifications/:user_id as per your controller
+    const res = await fetch(`${API}/api/notifications/${user_id}`)
+    if (res.ok) {
+      const data = await res.json()
+      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    }
+  } catch {}
+})
 
 const accessories = ref([])
 const router = useRouter()

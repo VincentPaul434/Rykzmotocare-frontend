@@ -39,6 +39,8 @@
             class="w-full h-40 object-cover rounded-t mb-2"
           />
           <h4 class="font-bold mb-1 text-center">{{ part.name }}</h4>
+          <p class="text-sm text-center mb-1">Brand: {{ part.brand }}</p>
+          <p class="text-sm text-center mb-1">Stock: {{ part.quantity }}</p>
           <p class="text-sm text-center mb-1">{{ part.description }}</p>
           <p class="text-yellow-600 font-bold mb-2">PHP{{ part.price }}</p>
           <!-- Add to Cart -->

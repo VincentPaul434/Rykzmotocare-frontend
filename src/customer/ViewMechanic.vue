@@ -169,13 +169,11 @@ function handleLogout() {
 }
 
 function img(url) {
-  const PLACEHOLDER = 'https://via.placeholder.com/64?text=IMG'
+  const PLACEHOLDER = 'https://placehold.co/64x64?text=IMG'
   if (!url) return PLACEHOLDER
-  const base = API
-  const normalized = String(url).replace(/\\/g, '/')
-  if (/^https?:\/\//i.test(normalized)) return normalized
-  if (normalized.startsWith('/')) return `${base}${normalized}`
-  return `${base}/${normalized}`
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('/')) return API + url
+  return API + '/' + url
 }
 
 async function fetchMechanics() {

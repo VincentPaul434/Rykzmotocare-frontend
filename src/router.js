@@ -66,12 +66,6 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // Customer protected routes
   const protectedRoutes = [
-    '/accessories',
-    '/customer-parts',
-    '/parts',
-    '/services',
-    '/oil',
-    '/tires',
     '/user-homepage',
     '/pending-approval',
     '/view-mechanic',

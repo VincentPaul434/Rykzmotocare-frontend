@@ -114,7 +114,14 @@
                   <span class="px-2 py-1 rounded" :class="badgeClass(b.status)">{{ b.status }}</span>
                 </td>
                 <td class="p-2">
-                  <button class="text-blue-700 underline" @click="select(b)">Track</button>
+                  <button
+                    v-if="isTrackableStatus(b.status)"
+                    class="text-blue-700 underline"
+                    @click="select(b)"
+                  >
+                    Track
+                  </button>
+                  <span v-else class="text-gray-400">Not Trackable</span>
                 </td>
               </tr>
               <tr v-if="!pagedList.length">
@@ -326,8 +333,17 @@ async function fetchBookingById(id) {
   }
 }
 
+function isTrackableStatus(status) {
+  const s = String(status || '').toLowerCase()
+  return !['cancelled', 'declined'].includes(s)
+}
+
 function select(b) {
-  // Only allow selecting from my list (already scoped)
+  // Prevent tracking cancelled or declined bookings
+  if (!isTrackableStatus(b.status)) {
+    alert('You cannot track a booking that is Cancelled or Declined.')
+    return
+  }
   booking.value = b
   queryId.value = String(b.id || '')
   router.replace({ query: { bookingId: queryId.value } })
