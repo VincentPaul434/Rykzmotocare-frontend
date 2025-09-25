@@ -26,7 +26,6 @@ import Feedback from './customer/Feedback.vue'
 import Mybookings from './customer/Mybookings.vue'
 import SuccessfullyPurchased from './customer/SuccessfullyPurchased.vue'
 import AboutUs from './customer/AboutUs.vue'
-import BrowseParts from './customer/BrowseParts.vue'
 
 const routes = [
   { path: '/', name: 'LandingPage', component: LandingPage },
@@ -55,9 +54,7 @@ const routes = [
   { path: '/feedback', name: 'Feedback', component: Feedback },
   { path: '/my-booking', name: 'Mybookings', component: Mybookings },
   { path: '/successfully-purchased', name: 'SuccessfullyPurchased', component: SuccessfullyPurchased },
-  { path: '/about-us', name: 'AboutUs', component: AboutUs },
-  { path: '/browse-parts', name: 'BrowseParts', component: BrowseParts }
-
+  { path: '/about-us', name: 'AboutUs', component: AboutUs }
 
 ]
 
@@ -72,10 +69,6 @@ router.beforeEach((to, from, next) => {
   // Customer protected routes
   const protectedRoutes = [
     '/user-homepage',
-    '/tires',
-    'accessories',
-    '/oil',
-    '/services',
     '/pending-approval',
     '/view-mechanic',
     '/bills',
