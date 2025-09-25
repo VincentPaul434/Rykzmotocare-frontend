@@ -297,12 +297,19 @@ watch([search, statusFilter, records], () => { currentPage.value = 1 })
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   return (records.value || []).filter(r => {
+    // Only show records that are paid
+    const isPaid = String(r.pay_status || '').toLowerCase() === 'paid'
+    // Optional: If you add orders, check for order kind and paid status
+    const isOrderPaid = r.kind === 'order' && String(r.pay_status || '').toLowerCase() === 'paid'
+    const show = isPaid || isOrderPaid
+
+    // Search and status filter
     const txt = `${r.booking_id ?? r.id ?? ''} ${r.service_type ?? ''}`.toLowerCase()
     const textOk = !q || txt.includes(q)
     const statusOk =
       statusFilter.value === 'all' ||
       String(r.status || '').toLowerCase() === statusFilter.value.toLowerCase()
-    return textOk && statusOk
+    return show && textOk && statusOk
   })
 })
 
@@ -470,9 +477,9 @@ function norm(s) { return String(s ?? '').trim().toLowerCase() }
 function canPayRow(row) {
   if (row.kind === 'payment') return false
   const amt = Number(row.total_amount || 0)
-  const isConfirmed = norm(row.book_status) === 'confirmed'
-  const isPaid = norm(row.pay_status) === 'paid' // use payment_status for "paid"
-  return amt > 0 && isConfirmed && !isPaid
+  const isCompleted = String(row.book_status || '').toLowerCase() === 'completed'
+  const isPaid = String(row.pay_status || '').toLowerCase() === 'paid'
+  return amt > 0 && isCompleted && !isPaid
 }
 
 // Detect a billing/payment notification mentioning the booking
