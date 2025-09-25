@@ -29,17 +29,11 @@ export function countItems(userId) {
 
 // Migrate guest cart to user cart once after login
 export function migrateGuestCartIfAny() {
-  const userId = localStorage.getItem('user_id')
-  if (!userId) return
-  const guestKey = getCartKey('guest')
-  const userKey = getCartKey(userId)
-  try {
-    const guest = JSON.parse(localStorage.getItem(guestKey) || '[]')
-    const user = JSON.parse(localStorage.getItem(userKey) || '[]')
-    if (Array.isArray(guest) && guest.length && (!Array.isArray(user) || !user.length)) {
-      localStorage.setItem(userKey, JSON.stringify(guest))
-      localStorage.removeItem(guestKey)
-      window.dispatchEvent(new Event('cart:updated'))
-    }
-  } catch { /* ignore */ }
+  const guestCart = JSON.parse(localStorage.getItem('cart:guest') || '[]')
+  const user_id = localStorage.getItem('user_id')
+  if (user_id && guestCart.length > 0) {
+    localStorage.setItem(`cart:${user_id}`, JSON.stringify(guestCart))
+    localStorage.removeItem('cart:guest') // Clear guest cart after migration
+    window.dispatchEvent(new Event('cart:updated'))
+  }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import ProfileMenu from '../components/ProfileMenu.vue'
 import CartIcon from '../components/CartIcon.vue'
 import CartDrawer from '../components/CartDrawer.vue'
@@ -9,29 +9,28 @@ const router = useRouter();
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' // added
 
 const showLogoutModal = ref(false)
-const notifications = ref<any[]>([])
 const showNotifications = ref(false)
+const notifications = ref([])
+const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 
-async function fetchNotifications() {
-  const user_id = localStorage.getItem('user_id')
-  if (!user_id) return
-  try {
-    const res = await fetch(`${API}/api/notifications/${user_id}`) // use API base
-    if (res.ok) {
-      const data = await res.json()
-      console.log('Fetched notifications:', data.notifications)
-      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
-    }
-  } catch {
-    notifications.value = []
-  }
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!localStorage.getItem('token')) {
     router.push('/')
   }
-  fetchNotifications()
+  try {
+    const user_id = localStorage.getItem('user_id')
+    const res = await fetch(`${API}/api/notifications/${user_id}`)
+    if (res.ok) {
+      const data = await res.json()
+      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    }
+  } catch {}
 })
 
 function handleLogout() {
@@ -45,28 +44,60 @@ function handleLogout() {
 <template>
   <div class="bg-gray-100 min-h-screen font-sans">
     <!-- Header -->
-    <header class="bg-gray-900 text-white flex flex-col md:flex-row items-center justify-between px-6 py-3">
+    <header class="bg-gray-900 text-white flex items-center justify-between px-4 md:px-6 py-3">
+      <!-- Logo -->
       <div class="flex items-center gap-2 text-2xl font-bold">
-        <span><span class="text-yellow-400">Rykz</span>motocare</span>
+        <span>
+          <span class="text-yellow-400">Rykz</span>
+          motocare
+        </span>
       </div>
-      <div class="flex items-center gap-4 mt-2 md:mt-0">
-        <span class="hidden md:inline text-yellow-400 font-bold cursor-pointer">HOME</span>
-        <button class="md:hidden text-xl"><i class="fa fa-bars"></i> MENU</button>
-        <router-link to="/parts" class="hidden md:inline cursor-pointer">PARTS</router-link>
-        <router-link to="/oil" class="hidden md:inline cursor-pointer">OIL</router-link>
-        <router-link to="/tires" class="hidden md:inline cursor-pointer">TIRES</router-link>
-        <router-link to="/accessories" class="hidden md:inline cursor-pointer">ACCESSORIES</router-link>
-        <router-link to="/services" class="hidden md:inline cursor-pointer">SERVICES</router-link>
-        <router-link to="/view-mechanic" class="hidden md:inline cursor-pointer">MEET THE MECHANICS</router-link>
-        <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
-      </div>
-      <div class="flex items-center gap-3 mt-2 md:mt-0">
-        <input class="rounded-full px-3 py-1 text-black" type="text" placeholder="Search..." />
-        <!-- Bell Icon and ProfileMenu -->
+      <!-- Navigation Links -->
+      <nav class="flex gap-4 items-center">
+        <router-link to="/user-homepage" class="text-yellow-400 font-bold cursor-pointer">HOME</router-link>
+        <router-link to="/parts" class="cursor-pointer">PARTS</router-link>
+        <router-link to="/oil" class="cursor-pointer">OIL</router-link>
+        <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
+        <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
+        <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
+        <router-link to="/view-mechanic" class="cursor-pointer">MEET THE MECHANICS</router-link>
+      </nav>
+      <!-- Right Side: Search, Notifications, Cart, Profile -->
+      <div class="flex items-center gap-3">
+        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+        <!-- Notification Bell Icon placed beside CartIcon -->
+        <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
+          <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
+        </button>
         <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
+
+    <!-- Notifications dropdown, scrollable -->
+    <div
+      v-if="showNotifications"
+      class="fixed top-16 right-4 w-80 max-h-[60vh] bg-white rounded-lg shadow-lg z-50 overflow-y-auto border"
+      style="transition: box-shadow 0.2s;"
+    >
+      <div class="p-4 border-b font-bold text-lg text-yellow-700">Notifications</div>
+      <div v-if="notifications.length === 0" class="p-4 text-gray-500 text-center">No notifications.</div>
+      <ul>
+        <li
+          v-for="(notif, idx) in notifications"
+          :key="notif.id || idx"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+        >
+          <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
+          <div class="text-sm text-gray-700">{{ notif.message }}</div>
+          <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+        </li>
+      </ul>
+    </div>
 
     <!-- Hero Section -->
     <section class="relative bg-gray-900 text-white flex flex-col md:flex-row items-center justify-between px-6 py-8">
@@ -199,10 +230,12 @@ function handleLogout() {
           <i class="fa fa-tiktok"></i>
         </div>
       </div>
-            <div class="text-center text-gray-400 text-sm py-4 border-t border-gray-700">
-              ©2023 RYKZMOTOCARE ALL RIGHTS RESERVED &nbsp; | &nbsp; PRIVACY POLICY &nbsp; | &nbsp; TERMS & CONDITIONS &nbsp; | &nbsp; ACCESSIBILITY
-            </div>
-          </footer>
+      <div class="text-center text-gray-400 text-sm py-4 border-t border-gray-700">
+        ©2023 RYKZMOTOCARE ALL RIGHTS RESERVED &nbsp; | &nbsp;
+        <a href="/about-us" class="hover:text-yellow-400">ABOUT US</a> &nbsp; | &nbsp;
+        PRIVACY POLICY &nbsp; | &nbsp; TERMS & CONDITIONS &nbsp; | &nbsp; ACCESSIBILITY
+      </div>
+    </footer>
           <!-- Logout Modal -->
           <div v-if="showLogoutModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">

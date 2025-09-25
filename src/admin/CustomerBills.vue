@@ -16,7 +16,7 @@
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
           <router-link to="/mechanic-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Available Mechanics</router-link>
           <router-link to="/customer-bills" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Customer Bills</router-link>
-          <router-link to="/customer-payment" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Payments</router-link>
+          <router-link to="/customer-payment" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Payment</router-link>
           <router-link to="/feedback-admin" class="block py-1 px-2 rounded hover: bg-gray=600">Feedback</router-link>
           <router-link to="/customer-approval" class="block py-1 px-2 rounded hover:bg-gray-600">Customer Approval</router-link>
         </nav>

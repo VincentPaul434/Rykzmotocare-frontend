@@ -1,26 +1,56 @@
 <template>
   <div class="bg-gray-100 min-h-screen font-sans">
     <!-- Header copied from Accessories (same flow/design) -->
-    <header class="bg-gray-900 text-white flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3">
+    <header class="bg-gray-900 text-white flex items-center justify-between px-4 md:px-6 py-3">
+      <!-- Logo -->
       <div class="flex items-center gap-2 text-2xl font-bold">
         <span><span class="text-yellow-400">Rykz</span>motocare</span>
       </div>
-      <div class="flex flex-wrap items-center gap-2 md:gap-4 mt-2 md:mt-0">
+      <!-- Navigation Links -->
+      <nav class="flex gap-4 items-center">
         <router-link to="/user-homepage" class="cursor-pointer">HOME</router-link>
         <router-link to="/parts" class="cursor-pointer">PARTS</router-link>
         <router-link to="/oil" class="cursor-pointer">OIL</router-link>
         <router-link to="/tires" class="cursor-pointer">TIRES</router-link>
         <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
-        <router-link to="/view-mechanic" class="hidden md:inline text-yellow-400 font-bold cursor-pointer">MEET OUR MECHANICS</router-link>
-        <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
-      </div>
-      <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
-        <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" placeholder="Search..." />
+        <router-link to="/view-mechanic" class="text-yellow-400 font-bold cursor-pointer">MEET THE MECHANICS</router-link>
+      </nav>
+      <!-- Right Side: Search, Notifications, Cart, Profile -->
+      <div class="flex items-center gap-3">
+        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+        <!-- Notification Bell Icon placed beside CartIcon -->
+        <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
+          <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
+        </button>
         <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
       </div>
     </header>
+
+      <div
+    v-if="showNotifications"
+    class="fixed top-16 right-4 w-80 max-h-[60vh] bg-white rounded-lg shadow-lg z-50 overflow-y-auto border"
+    style="transition: box-shadow 0.2s;"
+  >
+    <div class="p-4 border-b font-bold text-lg text-yellow-700">Notifications</div>
+    <div v-if="notifications.length === 0" class="p-4 text-gray-500 text-center">No notifications.</div>
+    <ul>
+      <li
+        v-for="(notif, idx) in notifications"
+        :key="notif.id || idx"
+        class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+      >
+        <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
+        <div class="text-sm text-gray-700">{{ notif.message }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+      </li>
+    </ul>
+  </div>
 
     <!-- Page content -->
     <section class="py-6 px-2 md:px-0">
@@ -146,7 +176,27 @@ import ProfileMenu from '../components/ProfileMenu.vue' // added
 
 const router = useRouter()
 
+const showNotifications = ref(false)
+const notifications = ref([])
+const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+
+onMounted(async () => {
+  try {
+    const user_id = localStorage.getItem('user_id')
+    const res = await fetch(`${API}/api/notifications/${user_id}`)
+    if (res.ok) {
+      const data = await res.json()
+      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    }
+  } catch {}
+})
 
 const mechanics = ref([])
 const loading = ref(false)

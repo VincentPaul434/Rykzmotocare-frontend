@@ -1,13 +1,15 @@
 <template>
   <div class="bg-gray-100 min-h-screen font-sans">
-    <header class="bg-gray-900 text-white flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3">
+    <header class="bg-gray-900 text-white flex items-center justify-between px-4 md:px-6 py-3">
+      <!-- Logo -->
       <div class="flex items-center gap-2 text-2xl font-bold">
         <span>
           <span class="text-yellow-400">Rykz</span>
           motocare
         </span>
       </div>
-      <div class="flex flex-wrap items-center gap-2 md:gap-4 mt-2 md:mt-0">
+      <!-- Navigation Links -->
+      <nav class="flex gap-4 items-center">
         <router-link to="/user-homepage" class="cursor-pointer">HOME</router-link>
         <router-link to="/parts" class="cursor-pointer">PARTS</router-link>
         <router-link to="/oil" class="text-yellow-400 font-bold cursor-pointer">OIL</router-link>
@@ -15,17 +17,16 @@
         <router-link to="/accessories" class="cursor-pointer">ACCESSORIES</router-link>
         <router-link to="/services" class="cursor-pointer">SERVICES</router-link>
         <router-link to="/view-mechanic" class="cursor-pointer">MEET THE MECHANICS</router-link>
-        <span class="hidden md:inline text-red-500 font-bold cursor-pointer">SALE</span>
-      </div>
-      <div class="flex items-center gap-2 md:gap-3 mt-2 md:mt-0 w-full md:w-auto">
-        <input class="rounded-full px-3 py-1 text-black w-full md:w-auto" type="text" v-model="search" placeholder="Search..." />
-        <!-- Notification Bell Icon placed beside CartIcon -->
+      </nav>
+      <!-- Right Side: Search, Notifications, Cart, Profile -->
+      <div class="flex items-center gap-3">
+        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
+        </svg>
+        <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
         </button>
         <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
