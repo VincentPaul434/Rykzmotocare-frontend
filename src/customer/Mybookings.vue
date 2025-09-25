@@ -17,6 +17,7 @@
             <th class="py-2 px-3 text-left">Vehicle</th>
             <th class="py-2 px-3 text-left">Mechanic</th>
             <th class="py-2 px-3 text-left">Status</th>
+            <th class="py-2 px-3 text-left">Date Completed</th>
             <th class="py-2 px-3 text-left">Action</th>
           </tr>
         </thead>
@@ -26,6 +27,11 @@
             <td class="py-2 px-3">{{ b.vehicle_model }}</td>
             <td class="py-2 px-3">{{ b.mechanic_name }}</td>
             <td class="py-2 px-3">{{ b.book_status }}</td>
+            <td class="py-2 px-3">
+              <span v-if="b.completed_at">{{ formatDate(b.completed_at) }}</span>
+              <span v-else-if="b.book_status === 'Completed' && b.updated_at">{{ formatDate(b.updated_at) }}</span>
+              <span v-else class="text-gray-400">—</span>
+            </td>
             <td class="py-2 px-3">
               <button
                 v-if="b.book_status !== 'Cancelled' && b.book_status !== 'Completed'"
@@ -78,6 +84,12 @@ async function cancelBooking(bookingId) {
   } catch (e) {
     alert('Could not cancel booking.')
   }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }
 
 onMounted(() => {

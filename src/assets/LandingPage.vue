@@ -10,14 +10,6 @@
       </div>
     </header>
     <!-- Navigation -->
-    <nav class="nav">
-  <span @click="router.push('/parts')" style="cursor:pointer;">PARTS</span>
-  <span @click="router.push('/accessories')" style="cursor:pointer;">ACCESSORIES</span>
-  <span @click="router.push('/tires')" style="cursor:pointer;">TIRES</span>
-  <span @click="router.push('/oil')" style="cursor:pointer;">OIL</span>
-  <span @click="router.push('/services')" style="cursor:pointer;">SERVICES</span>
-  <span class="sale" @click="router.push('/sale')" style="cursor:pointer;">SALE</span>
-    </nav>
     <!-- Hero Section -->
     <section
       class="hero"
@@ -33,8 +25,8 @@
         <h1>High-Performance <br /><span class="highlight">Motor Parts</span></h1>
         <p>Everything you need for your ride. Engineered to perform.</p>
         <!-- Browse Button moved here -->
-        <button class="shop-btn mt-4">
-         BROWSE YOUR PARTS
+        <button class="shop-btn mt-4" @click="goToBrowseParts">
+          BROWSE YOUR PARTS
         </button>
       </div>
       <img class="hero-bike" src="../assets/images/motorcycle.png" alt="Motorbike" />
@@ -428,6 +420,10 @@ const handleRegister = async () => {
   } catch (e) {
     registerError.value = 'Network error'
   }
+}
+
+function goToBrowseParts() {
+  router.push('/browse-parts') // Make sure this matches your route for BrowseParts.vue
 }
 </script>
 
