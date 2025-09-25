@@ -151,7 +151,7 @@
             </div>
             <div v-if="error" style="color:#e53e3e;font-size:0.95rem;margin-bottom:0.5rem;">{{ error }}</div>
             <div style="margin-bottom:1rem;text-align:left;">
-              <a href="#" style="font-size:0.95rem;text-decoration:underline;color:#222;">Forgot your password?</a>
+              <a href="#" style="font-size:0.95rem;text-decoration:underline;color:#222;" @click.prevent="showReset = true; showLogin = false;">Forgot your password?</a>
             </div>
             <button type="submit" style="font-family:inherit;font-size:1.1rem;font-weight:bold;letter-spacing:1px;">LOG IN</button>
           </form>
@@ -241,28 +241,65 @@
           </div>
         </div>
       </div>
-      <!-- Toast Notification -->
-      <div v-if="toast.show" class="fixed inset-0 z-[60] flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
-        <transition name="toast-pop">
-          <div
-            v-show="toast.show"
-            class="relative w-[90%] max-w-sm mx-auto bg-white rounded-2xl shadow-2xl ring-1 ring-green-200 p-5 text-green-800 pointer-events-auto"
-            role="status"
-            aria-live="polite"
-          >
-            <div class="flex items-center gap-3">
-              <div class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                <i class="fa fa-check"></i>
-              </div>
-              <div>
-                <div class="text-base font-semibold mb-1">Registration Successful</div>
-                <div class="text-sm opacity-90">Account created successfully.</div>
-              </div>
+
+      <!-- Reset Password Modal -->
+      <div v-if="showReset" class="modal-overlay">
+        <div class="modal-content">
+          <span class="modal-close" @click="showReset = false">&times;</span>
+          <h2>Reset Password</h2>
+          <form @submit.prevent="handleResetPassword">
+            <input
+              v-model="resetEmail"
+              type="email"
+              placeholder="Email Address*"
+              required
+              class="modal-input"
+              style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
+            />
+            <input
+              v-model="resetNewPassword"
+              type="password"
+              placeholder="New Password*"
+              required
+              class="modal-input"
+              style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
+            />
+            <input
+              v-model="resetConfirm"
+              type="password"
+              placeholder="Confirm New Password*"
+              required
+              class="modal-input"
+              style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
+            />
+            <div v-if="resetError" style="color:#e53e3e;font-size:0.95rem;margin-bottom:0.5rem;">{{ resetError }}</div>
+            <button type="submit" style="font-family:inherit;font-size:1.1rem;font-weight:bold;letter-spacing:1px;">RESET PASSWORD</button>
+          </form>
+        </div>
+      </div>
+
+    <!-- Toast Notification -->
+    <div v-if="toast.show" class="fixed inset-0 z-[60] flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+      <transition name="toast-pop">
+        <div
+          v-show="toast.show"
+          class="relative w-[90%] max-w-sm mx-auto bg-white rounded-2xl shadow-2xl ring-1 ring-green-200 p-5 text-green-800 pointer-events-auto"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="flex items-center gap-3">
+            <div class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+              <i class="fa fa-check"></i>
+            </div>
+            <div>
+              <div class="text-base font-semibold mb-1">{{ toast.message || 'Registration Successful' }}</div>
+              <div class="text-sm opacity-90">{{ toast.detail || 'Account created successfully.' }}</div>
             </div>
           </div>
-        </transition>
-      </div>
+        </div>
+      </transition>
+    </div>
       </div>
 </template>
 
@@ -273,6 +310,7 @@ import { useRouter } from 'vue-router'
 
 const showLogin = ref(false)
 const showCreate = ref(false)
+const showReset = ref(false)
 const email = ref('')
 const idNumber = ref('')
 const password = ref('')
@@ -285,11 +323,16 @@ const registerConfirm = ref('')
 const registerError = ref('')
 const router = useRouter()
 
+const resetEmail = ref('')
+const resetNewPassword = ref('')
+const resetConfirm = ref('')
+const resetError = ref('')
+
 const shopClosed = ref(false)
-const toast = ref({ show: false })
+const toast = ref({ show: false, message: '', detail: '' })
 let toastTimer = null
-function showToast(message = 'created account successfully.', duration = 1800) {
-  toast.value = { show: true, message }
+function showToast(message = 'created account successfully.', detail = '', duration = 1800) {
+  toast.value = { show: true, message, detail }
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = setTimeout(() => (toast.value.show = false), duration)
 }
@@ -419,6 +462,43 @@ const handleRegister = async () => {
     }, 1800)
   } catch (e) {
     registerError.value = 'Network error'
+  }
+}
+
+const handleResetPassword = async () => {
+  resetError.value = ''
+  if (!resetEmail.value || !resetNewPassword.value || !resetConfirm.value) {
+    resetError.value = 'Please fill out all fields.'
+    return
+  }
+  if (resetNewPassword.value !== resetConfirm.value) {
+    resetError.value = 'Passwords do not match.'
+    return
+  }
+  try {
+    const res = await fetch('http://localhost:5000/api/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: resetEmail.value,
+        newPassword: resetNewPassword.value
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      resetError.value = data.message || 'Reset failed'
+      return
+    }
+    showToast('Password Reset Successful', 'Your password has been updated.', 2000)
+    setTimeout(() => {
+      showReset.value = false
+      showLogin.value = true
+      resetEmail.value = ''
+      resetNewPassword.value = ''
+      resetConfirm.value = ''
+    }, 2000)
+  } catch (e) {
+    resetError.value = 'Network error'
   }
 }
 

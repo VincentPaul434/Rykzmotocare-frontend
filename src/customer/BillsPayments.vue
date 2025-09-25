@@ -9,6 +9,14 @@
         ← Back to Homepage
       </button>
 
+      <!-- Navigate to Orders History button -->
+      <button
+        class="mb-4 ml-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition"
+        @click="$router.push('/orders')"
+      >
+        View Paid Orders History
+      </button>
+
       <!-- Tabs -->
       <div class="flex items-center gap-3 mb-5 border-b">
         <button
@@ -470,9 +478,9 @@ function norm(s) { return String(s ?? '').trim().toLowerCase() }
 function canPayRow(row) {
   if (row.kind === 'payment') return false
   const amt = Number(row.total_amount || 0)
-  const isConfirmed = norm(row.book_status) === 'confirmed'
-  const isPaid = norm(row.pay_status) === 'paid' // use payment_status for "paid"
-  return amt > 0 && isConfirmed && !isPaid
+  const isCompleted = norm(row.book_status) === 'completed' // <-- changed from 'confirmed'
+  const isPaid = norm(row.pay_status) === 'paid'
+  return amt > 0 && isCompleted && !isPaid
 }
 
 // Detect a billing/payment notification mentioning the booking
@@ -499,42 +507,31 @@ const isPayableBookingId = computed(() => {
   const noted = hasBillingNotification(id) || notifiedAmount.value != null
 
   if (!row) {
-    // If not in list, allow only when user entered an amount and there is a billing note
     return entered && noted
   }
 
-  const confirmed = norm(row.book_status) === 'confirmed'
+  const completed = norm(row.book_status) === 'completed' // <-- changed from 'confirmed'
   const alreadyPaid = norm(row.pay_status) === 'paid'
   const hasDue = Number(row.total_amount || 0) > 0
 
-  return confirmed && !alreadyPaid && (hasDue || entered || noted)
+  return completed && !alreadyPaid && (hasDue || entered || noted)
 })
 
-// Find booking by ID
-const currentBooking = computed(() =>
-  records.value.find(r => String(r.booking_id) === String(pay.value.booking_id))
-)
-
-// Enable Continue when:
-// - booking exists and is Confirmed
-// - not already Paid
-// - amount > 0 and method selected
 const canStart = computed(() => {
   const row = currentBooking.value
   const amtOk = Number(pay.value.amount) > 0
   const methodOk = !!pay.value.method
   if (!row) return false
-  const confirmed = String(row.book_status || row.status || '').toLowerCase() === 'confirmed'
+  const completed = String(row.book_status || row.status || '').toLowerCase() === 'completed' // <-- changed from 'confirmed'
   const alreadyPaid = String(row.pay_status || '').toLowerCase() === 'paid'
-  return confirmed && !alreadyPaid && amtOk && methodOk
+  return completed && !alreadyPaid && amtOk && methodOk
 })
 
-// Helpful reason (optional)
 const continueDisabledReason = computed(() => {
   const row = currentBooking.value
   if (!pay.value.booking_id) return 'Enter a booking ID.'
   if (!row) return 'Booking not found.'
-  if (String(row.book_status).toLowerCase() !== 'confirmed') return 'Booking not confirmed by admin yet.'
+  if (String(row.book_status).toLowerCase() !== 'completed') return 'Booking not completed by admin yet.' // <-- changed from 'confirmed'
   if (String(row.pay_status || '').toLowerCase() === 'paid') return 'Already paid.'
   if (!(Number(pay.value.amount) > 0)) return 'Enter a valid amount.'
   if (!pay.value.method) return 'Select a payment method.'
@@ -694,6 +691,12 @@ function openPay(row) {
   paySuccess.value = false
   payFile.value = null
 }
+
+const currentBooking = computed(() => {
+  const id = String(pay.value.booking_id || '').trim()
+  if (!id) return null
+  return records.value.find(r => String(r.booking_id) === id) || null
+})
 
 onMounted(async () => {
   await Promise.all([load(), fetchNotifications()])
