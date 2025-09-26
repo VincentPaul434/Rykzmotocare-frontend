@@ -41,7 +41,7 @@
           <div>Number: <span class="font-semibold">{{ payment.instructions.number }}</span></div>
           <div>Name: <span class="font-semibold">{{ payment.instructions.name }}</span></div>
           <img
-            src="../assets/images/gcash-qr.png"
+            :src="payment.instructions.qr_url && payment.instructions.qr_url !== 'null' ? payment.instructions.qr_url : gcashQr"
             alt="GCash QR"
             class="w-48 h-48 object-contain mt-2 border rounded"
           />
@@ -72,6 +72,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { clearCart } from '../utils/cart'
+import gcashQr from '../assets/images/gcash-qr.webp'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
@@ -140,16 +141,7 @@ async function startPayment() {
             name: instrData.name ?? data.gcash_name ?? data.name ?? '',
             qr_url: instrData.qr_url ?? data.qr_url ?? ''
           }
-        : m === 'bdo'
-        ? {
-            account_name: instrData.account_name ?? data.bdo_account_name ?? data.account_name ?? '',
-            account_number: instrData.account_number ?? data.bdo_account_number ?? data.account_number ?? '',
-            branch: instrData.branch ?? data.bdo_branch ?? data.branch ?? ''
-          }
-        : {
-            number: instrData.number ?? data.maya_number ?? data.number ?? '',
-            name: instrData.name ?? data.maya_name ?? data.name ?? ''
-          }
+        : {}; // Remove BDO and Paymaya references
 
     const noteValue = typeof data.instructions === 'string'
       ? data.instructions

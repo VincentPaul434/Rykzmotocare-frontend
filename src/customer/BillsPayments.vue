@@ -188,8 +188,6 @@
               <select v-model="pay.method" class="border rounded px-3 py-2 w-full">
                 <option value="">Select</option>
                 <option value="gcash">GCash</option>
-                <option value="bdo">BDO</option>
-                <option value="paymaya">Maya</option>
               </select>
             </div>
           </div>
@@ -215,22 +213,11 @@
           </div>
           <p class="mt-3">{{ payInfo.note || 'Send payment using the details below, then upload the receipt.' }}</p>
 
-          <!-- GCash -->
+          <!-- Payment Instructions (Pay Service tab) -->
           <div v-if="pay.method==='gcash'" class="mt-3 text-sm">
             <div>Number: <span class="font-semibold">{{ payInstr.number }}</span></div>
             <div>Name: <span class="font-semibold">{{ payInstr.name }}</span></div>
             <img v-if="payInstr.qr_url" :src="resolveUrl(payInstr.qr_url)" alt="GCash QR" class="w-40 border rounded mt-2" />
-          </div>
-          <!-- BDO -->
-          <div v-else-if="pay.method==='bdo'" class="mt-3 text-sm">
-            <div>Account: <span class="font-semibold">{{ payInstr.account_name }}</span></div>
-            <div>Number: <span class="font-semibold">{{ payInstr.account_number }}</span></div>
-            <div>Branch: <span class="font-semibold">{{ payInstr.branch }}</span></div>
-          </div>
-          <!-- Maya -->
-          <div v-else-if="pay.method==='paymaya'" class="mt-3 text-sm">
-            <div>Number: <span class="font-semibold">{{ payInstr.number }}</span></div>
-            <div>Name: <span class="font-semibold">{{ payInstr.name }}</span></div>
           </div>
 
           <div class="mt-6">
@@ -590,17 +577,6 @@ async function startServicePayment() {
         number: instrObj.number ?? data.gcash_number ?? data.number ?? '',
         name: instrObj.name ?? data.gcash_name ?? data.name ?? '',
         qr_url: instrObj.qr_url ?? data.qr_url ?? ''
-      }
-    } else if (pay.value.method === 'bdo') {
-      payInstr.value = {
-        account_name: instrObj.account_name ?? data.bdo_account_name ?? data.account_name ?? '',
-        account_number: instrObj.account_number ?? data.bdo_account_number ?? data.account_number ?? '',
-        branch: instrObj.branch ?? data.bdo_branch ?? data.branch ?? ''
-      }
-    } else {
-      payInstr.value = {
-        number: instrObj.number ?? data.maya_number ?? data.number ?? '',
-        name: instrObj.name ?? data.maya_name ?? data.name ?? ''
       }
     }
 

@@ -25,13 +25,18 @@
       Thank you for your feedback!
     </div>
     <div v-else>
-      <div v-if="completedBookings.length === 0" class="bg-gray-50 border border-gray-200 text-gray-500 rounded p-3 mb-4">
+      <div v-if="done || completedBookings.length === 0" class="bg-gray-50 border border-gray-200 text-gray-500 rounded p-3 mb-4">
         No completed bookings available for feedback.
       </div>
       <div v-else>
         <div class="mb-4">
           <label class="block mb-2 font-semibold text-gray-700" for="booking-select">Select Completed Booking</label>
-          <select id="booking-select" v-model="selectedBookingId" class="border rounded px-3 py-2 w-full focus:ring-yellow-400 focus:border-yellow-400">
+          <select
+            id="booking-select"
+            v-model="selectedBookingId"
+            :disabled="done"
+            class="border rounded px-3 py-2 w-full focus:ring-yellow-400 focus:border-yellow-400"
+          >
             <option value="">-- Select Booking --</option>
             <option v-for="b in completedBookings" :key="b.booking_id" :value="b.booking_id">
               {{ b.booking_id }} - {{ b.service_requested }}
@@ -90,6 +95,10 @@
         </div>
       </div>
     </div>
+
+    <div v-if="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-4 py-2 rounded shadow z-50">
+      {{ toast }}
+    </div>
   </div>
 </template>
 
@@ -107,6 +116,7 @@ const feedbacks = ref([])
 const selectedBookingId = ref('')
 const rating = ref(5)
 const comment = ref('')
+const toast = ref('')
 
 // Ensure rating is always 1-5
 function setRating(n) {
@@ -116,8 +126,8 @@ function setRating(n) {
 // Fetch completed bookings and feedbacks for this user
 onMounted(async () => {
   try {
-    // Get bookings
-    const res1 = await fetch(`${API}/api/bookings?user_id=${userId}`)
+    // Get only completed bookings for this user
+    const res1 = await fetch(`${API}/api/bookings/user/${userId}/completed`)
     if (!res1.ok) throw new Error('Failed to load bookings')
     bookings.value = await res1.json()
 
@@ -134,11 +144,8 @@ onMounted(async () => {
 
 // Only bookings that are Completed and have no feedback yet
 const completedBookings = computed(() => {
-  const fbBookingIds = new Set(feedbacks.value.map(fb => fb.booking_id))
-  return bookings.value.filter(b =>
-    String(b.book_status).toLowerCase() === 'completed' &&
-    !fbBookingIds.has(b.booking_id)
-  )
+  const fbBookingIds = new Set(feedbacks.value.map(fb => Number(fb.booking_id)))
+  return bookings.value.filter(b => !fbBookingIds.has(Number(b.booking_id)))
 })
 
 async function submit() {
@@ -156,21 +163,36 @@ async function submit() {
         comment: comment.value
       })
     })
-    if (!res.ok) throw new Error(await res.text())
+    if (!res.ok) {
+      const msg = await res.text()
+      showToast(msg)
+      submitting.value = false
+      return
+    }
     done.value = true
 
-    // Refresh feedbacks so the booking disappears from the list
-    const res2 = await fetch(`${API}/api/feedbacks?user_id=${userId}`)
+    // Force refresh bookings and feedbacks
+    const [res1, res2] = await Promise.all([
+      fetch(`${API}/api/bookings/user/${userId}/completed`),
+      fetch(`${API}/api/feedbacks?user_id=${userId}`)
+    ])
+    bookings.value = res1.ok ? await res1.json() : []
     feedbacks.value = res2.ok ? await res2.json() : []
 
-    // Optionally clear selection and comment for next feedback
     selectedBookingId.value = ''
     comment.value = ''
     rating.value = 5
+
+    showToast('Feedback submitted successfully!')
   } catch (e) {
     error.value = e.message || 'Submit failed.'
   } finally {
     submitting.value = false
   }
+}
+
+function showToast(msg, duration = 2500) {
+  toast.value = msg
+  setTimeout(() => { toast.value = '' }, duration)
 }
 </script>
