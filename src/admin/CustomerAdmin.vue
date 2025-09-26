@@ -123,6 +123,12 @@
             placeholder="Phone"
             class="border rounded px-3 py-2"
           />
+          <input
+            v-model="editForm.password"
+            type="password"
+            placeholder="New Password (leave blank to keep current)"
+            class="border rounded px-3 py-2"
+          />
           <div class="flex justify-end gap-2 mt-2">
             <button
               type="button"
@@ -207,10 +213,14 @@ async function saveEdit() {
   saving.value = true
   editError.value = ''
   try {
+    const payload = { ...editForm.value }
+    // If password is blank, don't send it
+    if (!payload.password) delete payload.password
+
     const res = await fetch(`http://localhost:5000/api/customers/${editingId.value}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editForm.value)
+      body: JSON.stringify(payload)
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))

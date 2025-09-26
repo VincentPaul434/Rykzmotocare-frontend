@@ -17,7 +17,15 @@
       </nav>
       <!-- Right Side: Search, Notifications, Cart, Profile -->
       <div class="flex items-center gap-3">
-        <input class="rounded-full px-3 py-1 text-black w-40" type="text" placeholder="Search..." />
+          <div class="flex items-center gap-3">
+            <input
+              class="rounded-full px-3 py-1 w-40"
+              type="text"
+              v-model="search"
+              placeholder="Search..."
+              style="background: #fff; color: #222; border: 1px solid #e5e7eb;" 
+            />
+          </div>
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -41,12 +49,20 @@
       <ul>
         <li
           v-for="(notif, idx) in notifications"
-          :key="notif.id || idx"
-          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+          :key="notif.notification_id"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition flex justify-between items-center"
         >
-          <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
-          <div class="text-sm text-gray-700">{{ notif.message }}</div>
-          <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          <div>
+            <div class="font-semibold">{{ notif.type === 'billing' ? 'Billing' : 'Booking' }}</div>
+            <div class="text-sm text-gray-700">{{ notif.message }}</div>
+            <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          </div>
+          <button
+            @click="markAsRead(notif.notification_id)"
+            class="ml-2 text-blue-600 underline text-xs"
+          >
+            Mark as read
+          </button>
         </li>
       </ul>
     </div>
@@ -56,7 +72,7 @@
       <h3 class="text-lg text-center mb-6">Accessories Available In Store Now!</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
         <div
-          v-for="item in accessories"
+          v-for="item in filteredAccessories"
           :key="item.item_id"
           class="bg-white rounded-xl shadow w-full max-w-xs p-4 flex flex-col items-center"
         >
@@ -152,7 +168,6 @@ import ProfileMenu from '../components/ProfileMenu.vue'
 const showNotifications = ref(false)
 const notifications = ref([])
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function formatDate(dateStr) {
@@ -162,16 +177,26 @@ function formatDate(dateStr) {
 }
 
 onMounted(async () => {
-  try {
-    const user_id = localStorage.getItem('user_id')
-    // Use /api/notifications/:user_id as per your controller
-    const res = await fetch(`${API}/api/notifications/${user_id}`)
-    if (res.ok) {
-      const data = await res.json()
-      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
-    }
-  } catch {}
+  const user_id = localStorage.getItem('user_id')
+  const res = await fetch(`${API}/api/read/${user_id}/unread`)
+  if (res.ok) {
+    const data = await res.json()
+    notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }
 })
+
+async function markAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API}/api/read/${notificationId}/readone`, {
+      method: 'PATCH'
+    })
+    if (!res.ok) throw new Error('Failed to mark as read')
+    notifications.value = notifications.value.filter(n => n.notification_id !== notificationId)
+  } catch (e) {
+    // Optionally handle error
+  }
+}
 
 const accessories = ref([])
 const router = useRouter()
@@ -238,6 +263,16 @@ async function validateCartAPI(items) {
   if (!res.ok) throw new Error(await res.text().catch(() => 'Validate failed'))
   return res.json() // expect { issues: [], details: [...] } (ok if no issues)
 }
+
+const search = ref('')
+
+const filteredAccessories = computed(() =>
+  accessories.value.filter(item =>
+    !search.value ||
+    item.name?.toLowerCase().includes(search.value.toLowerCase()) ||
+    item.brand?.toLowerCase().includes(search.value.toLowerCase())
+  )
+)
 
 function openQtyModal(item) {
   selectedItem.value = item

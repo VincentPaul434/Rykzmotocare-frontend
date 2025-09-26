@@ -20,13 +20,19 @@
       </nav>
       <!-- Right Side: Search, Notifications, Cart, Profile -->
       <div class="flex items-center gap-3">
-        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+        <input
+          class="rounded-full px-3 py-1 w-40"
+          type="text"
+          v-model="search"
+          placeholder="Search..."
+          style="background: #fff; color: #222; border: 1px solid #e5e7eb;" 
+        />
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
+          </svg>
+          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs">{{ unreadCount }}</span>
         </button>
         <CartIcon />
         <ProfileMenu @logout="showLogoutModal = true" />
@@ -44,12 +50,20 @@
       <ul>
         <li
           v-for="(notif, idx) in notifications"
-          :key="notif.id || idx"
-          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+          :key="notif.notification_id"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition flex justify-between items-center"
         >
-          <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
-          <div class="text-sm text-gray-700">{{ notif.message }}</div>
-          <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          <div>
+            <div class="font-semibold">{{ notif.type === 'billing' ? 'Billing' : 'Booking' }}</div>
+            <div class="text-sm text-gray-700">{{ notif.message }}</div>
+            <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          </div>
+          <button
+            @click="markAsRead(notif.notification_id)"
+            class="ml-2 text-blue-600 underline text-xs"
+          >
+            Mark as read
+          </button>
         </li>
       </ul>
     </div>
@@ -156,7 +170,6 @@ import ProfileMenu from '../components/ProfileMenu.vue'
 const showNotifications = ref(false)
 const notifications = ref([])
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function formatDate(dateStr) {
@@ -166,15 +179,26 @@ function formatDate(dateStr) {
 }
 
 onMounted(async () => {
-  try {
-    const user_id = localStorage.getItem('user_id')
-    const res = await fetch(`${API}/api/notifications/${user_id}`)
-    if (res.ok) {
-      const data = await res.json()
-      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
-    }
-  } catch {}
+  const user_id = localStorage.getItem('user_id')
+  const res = await fetch(`${API}/api/read/${user_id}/unread`)
+  if (res.ok) {
+    const data = await res.json()
+    notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }
 })
+
+async function markAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API}/api/read/${notificationId}/readone`, {
+      method: 'PATCH'
+    })
+    if (!res.ok) throw new Error('Failed to mark as read')
+    notifications.value = notifications.value.filter(n => n.notification_id !== notificationId)
+  } catch (e) {
+    // Optionally handle error
+  }
+}
 
 const oilProducts = ref([])
 const router = useRouter()

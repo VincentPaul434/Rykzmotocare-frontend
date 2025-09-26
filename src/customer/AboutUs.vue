@@ -33,7 +33,12 @@
             </p>
             <p class="mt-2">📞 Contact us: <span class="font-semibold">091994911803</span></p>
           </div>
-          <img src="https://placehold.co/300x200?text=Map+Location" alt="Shop Location" class="rounded shadow border" />
+          <img 
+            src="../assets/images/catarman.png" 
+            alt="Shop Location" 
+            class="rounded shadow border"
+            style="width:350px;max-width:100%;height:auto;"
+          />
         </div>
       </div>
     </section>

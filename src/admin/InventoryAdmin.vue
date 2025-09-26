@@ -10,7 +10,7 @@
           </span>
         </div>
         <nav class="space-y-2">
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
+          <a href="#" @click.prevent="handleCloseShop" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
           <router-link to="/customer-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Customer</router-link>
           <a href="#" class="block py-1 px-2 rounded text-yellow-400 bg-gray-600 font-semibold">Inventory</a>
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
@@ -390,6 +390,24 @@ async function editItem() {
     await fetchItems()
   } catch {
     alert('Failed to edit item')
+  }
+}
+
+async function handleCloseShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' })
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success !== true) {
+      alert(data.error || 'Failed to close shop.')
+      return
+    }
+    router.push('/close-shop')
+  } catch {
+    alert('Error closing shop.')
   }
 }
 

@@ -108,6 +108,7 @@
         <span>PRIVACY POLICY</span>
         <span>TERMS & CONDITIONS</span>
         <span>ACCESSIBILITY STATEMENT</span>
+        <router-link to="/about-us" style="cursor:pointer;text-decoration:underline;">ABOUT US</router-link>
       </div>
     </footer>
 
@@ -135,18 +136,23 @@
               autocomplete="username"
               style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
             />
+            <!-- Login Modal Password Input -->
             <div style="position:relative;">
               <input
                 v-model="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="Password*"
                 required
                 class="modal-input"
                 autocomplete="current-password"
                 style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
               />
-              <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#bbb;cursor:pointer;">
-                <i class="fa fa-eye-slash"></i>
+              <span
+                style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#bbb;cursor:pointer;"
+                @click="showPassword = !showPassword"
+                :title="showPassword ? 'Hide password' : 'Show password'"
+              >
+                <i :class="showPassword ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
               </span>
             </div>
             <div v-if="error" style="color:#e53e3e;font-size:0.95rem;margin-bottom:0.5rem;">{{ error }}</div>
@@ -256,22 +262,40 @@
               class="modal-input"
               style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
             />
-            <input
-              v-model="resetNewPassword"
-              type="password"
-              placeholder="New Password*"
-              required
-              class="modal-input"
-              style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
-            />
-            <input
-              v-model="resetConfirm"
-              type="password"
-              placeholder="Confirm New Password*"
-              required
-              class="modal-input"
-              style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
-            />
+            <div style="position:relative;">
+              <input
+                v-model="resetNewPassword"
+                :type="showResetPassword ? 'text' : 'password'"
+                placeholder="New Password*"
+                required
+                class="modal-input"
+                style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
+              />
+              <span
+                style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#bbb;cursor:pointer;"
+                @click="showResetPassword = !showResetPassword"
+                :title="showResetPassword ? 'Hide password' : 'Show password'"
+              >
+                <i :class="showResetPassword ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
+              </span>
+            </div>
+            <div style="position:relative;">
+              <input
+                v-model="resetConfirm"
+                :type="showResetConfirm ? 'text' : 'password'"
+                placeholder="Confirm New Password*"
+                required
+                class="modal-input"
+                style="font-family:inherit;font-size:1.05rem;font-weight:500;background:#fafbfc;color:#222;"
+              />
+              <span
+                style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#bbb;cursor:pointer;"
+                @click="showResetConfirm = !showResetConfirm"
+                :title="showResetConfirm ? 'Hide password' : 'Show password'"
+              >
+                <i :class="showResetConfirm ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
+              </span>
+            </div>
             <div v-if="resetError" style="color:#e53e3e;font-size:0.95rem;margin-bottom:0.5rem;">{{ resetError }}</div>
             <button type="submit" style="font-family:inherit;font-size:1.1rem;font-weight:bold;letter-spacing:1px;">RESET PASSWORD</button>
           </form>
@@ -300,6 +324,20 @@
         </div>
       </transition>
     </div>
+
+    <!-- About Us Modal -->
+    <div v-if="showAboutUs" class="modal-overlay">
+      <div class="modal-content">
+        <span class="modal-close" @click="showAboutUs = false">&times;</span>
+        <h2>About Us</h2>
+        <p>
+          Rykzmotocare is dedicated to providing high-quality motorcycle parts, expert maintenance, and reliable service. 
+          Our team of skilled technicians and passionate riders ensures your bike is always ready for the road. 
+          We value customer satisfaction, safety, and innovation in every aspect of our business.
+        </p>
+      </div>
+    </div>
+
       </div>
 </template>
 
@@ -311,6 +349,10 @@ import { useRouter } from 'vue-router'
 const showLogin = ref(false)
 const showCreate = ref(false)
 const showReset = ref(false)
+const showAboutUs = ref(false)
+const showPassword = ref(false) // for login modal
+const showResetPassword = ref(false) // for reset password modal
+const showResetConfirm = ref(false) // for reset confirm password
 const email = ref('')
 const idNumber = ref('')
 const password = ref('')

@@ -64,6 +64,7 @@
                   <th class="text-left p-2">Service</th>
                   <th class="text-left p-2">Total Amount</th>
                   <th class="text-left p-2">Status</th>
+                  <th class="text-left p-2">Completed At</th> <!-- Added column -->
                   <th class="text-left p-2">Actions</th>
                 </tr>
               </thead>
@@ -80,6 +81,13 @@
                     <span :class="statusClass(b.status)">
                       {{ b.status }}
                     </span>
+                  </td>
+                  <td class="p-2">
+                    <!-- Show completed_at if available and status is completed -->
+                    <span v-if="b.completed_at && String(b.status).toLowerCase() === 'completed'">
+                      {{ formatDate(b.completed_at) }}
+                    </span>
+                    <span v-else class="text-gray-400">—</span>
                   </td>
                   <td class="p-2 space-x-3">
                     <button class="text-yellow-700 hover:underline" @click="openDetails(b)">View Details</button>
@@ -346,15 +354,14 @@ function mapBill(r) {
     id: r.booking_id ?? r.id,
     booking_id: r.booking_id ?? r.id,
     service_type: r.service_requested ?? r.service_type ?? '',
-    // display_amount shows DB total_amount; if null/0, fallback to latest payment amount
     display_amount: Number(r.total_amount ?? 0) || fallbackAmt,
-    total_amount: Number(r.total_amount ?? 0), // keep raw for logic if you need it
-    // booking_status shown in UI
+    total_amount: Number(r.total_amount ?? 0),
     status: r.book_status ?? r.booking_status ?? 'Pending',
-    // payment-related fields (fallback to latest payment)
     pay_status: r.payment_status ?? pay?.status ?? '',
     receipt_url: r.receipt_url ?? pay?.receipt_url ?? null,
     created_at: r.created_at ?? r.updated_at ?? pay?.created_at ?? null,
+    // Use updated_at for completed_at if completed_at is not available
+    completed_at: r.completed_at ?? r.updated_at ?? pay?.completed_at ?? pay?.updated_at ?? null,
     user_id: r.user_id ?? r.customer_id ?? null,
     kind: 'bill'
   }

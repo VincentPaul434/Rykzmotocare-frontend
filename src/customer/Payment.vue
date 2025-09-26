@@ -12,12 +12,6 @@
           <label class="flex items-center gap-2">
             <input type="radio" value="gcash" v-model="method" /> GCash
           </label>
-          <label class="flex items-center gap-2">
-            <input type="radio" value="bdo" v-model="method" /> BDO Bank Transfer
-          </label>
-          <label class="flex items-center gap-2">
-            <input type="radio" value="paymaya" v-model="method" /> Maya
-          </label>
         </div>
         <div class="mt-4 flex gap-2">
           <button class="px-4 py-2 border rounded" @click="router.back()">Back</button>
@@ -42,29 +36,15 @@
         </div>
         <p class="mt-3">{{ payment.instructions?.note || 'Send payment using the details below, then upload the receipt.' }}</p>
 
-        <!-- GCash -->
+        <!-- GCash ONLY -->
         <div v-if="payment.method === 'gcash'" class="mt-3 text-sm">
           <div>Number: <span class="font-semibold">{{ payment.instructions.number }}</span></div>
           <div>Name: <span class="font-semibold">{{ payment.instructions.name }}</span></div>
           <img
-            v-if="payment.instructions.qr_url"
-            :src="resolve(payment.instructions.qr_url)"
+            src="../assets/images/gcash-qr.png"
             alt="GCash QR"
             class="w-48 h-48 object-contain mt-2 border rounded"
           />
-        </div>
-
-        <!-- BDO -->
-        <div v-else-if="payment.method === 'bdo'" class="mt-3 text-sm">
-          <div>Account: <span class="font-semibold">{{ payment.instructions.account_name }}</span></div>
-          <div>Number: <span class="font-semibold">{{ payment.instructions.account_number }}</span></div>
-          <div>Branch: <span class="font-semibold">{{ payment.instructions.branch }}</span></div>
-        </div>
-
-        <!-- PayMaya -->
-        <div v-else-if="payment.method === 'paymaya'" class="mt-3 text-sm">
-          <div>Number: <span class="font-semibold">{{ payment.instructions.number }}</span></div>
-          <div>Name: <span class="font-semibold">{{ payment.instructions.name }}</span></div>
         </div>
 
         <div class="mt-6">

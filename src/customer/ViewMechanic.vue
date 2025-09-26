@@ -18,7 +18,15 @@
       </nav>
       <!-- Right Side: Search, Notifications, Cart, Profile -->
       <div class="flex items-center gap-3">
-        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+          <div class="flex items-center gap-3">
+            <input
+              class="rounded-full px-3 py-1 w-40"
+              type="text"
+              v-model="search"
+              placeholder="Search..."
+              style="background: #fff; color: #222; border: 1px solid #e5e7eb;" 
+            />
+          </div>
         <!-- Notification Bell Icon placed beside CartIcon -->
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,25 +40,34 @@
       </div>
     </header>
 
-      <div
-    v-if="showNotifications"
-    class="fixed top-16 right-4 w-80 max-h-[60vh] bg-white rounded-lg shadow-lg z-50 overflow-y-auto border"
-    style="transition: box-shadow 0.2s;"
-  >
-    <div class="p-4 border-b font-bold text-lg text-yellow-700">Notifications</div>
-    <div v-if="notifications.length === 0" class="p-4 text-gray-500 text-center">No notifications.</div>
-    <ul>
-      <li
-        v-for="(notif, idx) in notifications"
-        :key="notif.id || idx"
-        class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
-      >
-        <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
-        <div class="text-sm text-gray-700">{{ notif.message }}</div>
-        <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
-      </li>
-    </ul>
-  </div>
+    <!-- Notifications dropdown, scrollable -->
+    <div
+      v-if="showNotifications"
+      class="fixed top-16 right-4 w-80 max-h-[60vh] bg-white rounded-lg shadow-lg z-50 overflow-y-auto border"
+      style="transition: box-shadow 0.2s;"
+    >
+      <div class="p-4 border-b font-bold text-lg text-yellow-700">Notifications</div>
+      <div v-if="notifications.length === 0" class="p-4 text-gray-500 text-center">No notifications.</div>
+      <ul>
+        <li
+          v-for="(notif, idx) in notifications"
+          :key="notif.notification_id"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition flex justify-between items-center"
+        >
+          <div>
+            <div class="font-semibold">{{ notif.type === 'billing' ? 'Billing' : 'Booking' }}</div>
+            <div class="text-sm text-gray-700">{{ notif.message }}</div>
+            <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          </div>
+          <button
+            @click="markAsRead(notif.notification_id)"
+            class="ml-2 text-blue-600 underline text-xs"
+          >
+            Mark as read
+          </button>
+        </li>
+      </ul>
+    </div>
 
     <!-- Page content -->
     <section class="py-6 px-2 md:px-0">
@@ -83,6 +100,7 @@
                 <tr class="border-b bg-gray-100">
                   <th class="text-left p-2">Mechanic</th>
                   <th class="text-left p-2">Specialty</th>
+                  <th class="text-left p-2">Experience (years)</th> <!-- Added column -->
                   <th class="text-left p-2">Days</th>
                   <th class="text-left p-2">Time</th>
                   <th class="text-left p-2">Status</th>
@@ -96,6 +114,7 @@
                     <span class="font-medium">{{ m.name }}</span>
                   </td>
                   <td class="p-2">{{ m.specialization || m.availability || '—' }}</td>
+                  <td class="p-2">{{ m.experience ?? '—' }}</td> <!-- Added cell -->
                   <td class="p-2">{{ m.days_available || '—' }}</td>
                   <td class="p-2">{{ m.time_available || '—' }}</td>
                   <td class="p-2">
@@ -188,15 +207,26 @@ function formatDate(dateStr) {
 }
 
 onMounted(async () => {
-  try {
-    const user_id = localStorage.getItem('user_id')
-    const res = await fetch(`${API}/api/notifications/${user_id}`)
-    if (res.ok) {
-      const data = await res.json()
-      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
-    }
-  } catch {}
+  const user_id = localStorage.getItem('user_id')
+  const res = await fetch(`${API}/api/read/${user_id}/unread`)
+  if (res.ok) {
+    const data = await res.json()
+    notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }
 })
+
+async function markAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API}/api/read/${notificationId}/readone`, {
+      method: 'PATCH'
+    })
+    if (!res.ok) throw new Error('Failed to mark as read')
+    notifications.value = notifications.value.filter(n => n.notification_id !== notificationId)
+  } catch (e) {
+    // Optionally handle error
+  }
+}
 
 const mechanics = ref([])
 const loading = ref(false)
@@ -237,6 +267,7 @@ async function fetchMechanics() {
       id: m.id ?? m.mechanic_id ?? m.user_id,
       name: m.name,
       specialization: m.specialization,
+      experience: m.experience, // <-- add this line
       days_available: m.days_available,
       time_available: m.time_available,
       status: m.status,

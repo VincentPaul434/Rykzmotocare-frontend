@@ -10,7 +10,7 @@
           </span>
         </div>
         <nav class="space-y-2">
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
+          <a href="#" @click.prevent="handleCloseShop" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
           <router-link to="/customer-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Customer</router-link>
           <router-link to="/inventory-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Inventory</router-link>
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
@@ -82,6 +82,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const customers = ref([])
 
@@ -123,11 +126,16 @@ async function rejectCustomer(user_id) {
   if (!confirm('Are you sure you want to reject this customer?')) return;
   try {
     const res = await fetch(`http://localhost:5000/api/customers/${user_id}/reject`, {
-      method: 'PATCH', // Assuming PATCH for reject
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' }
     });
-    if (!res.ok) throw new Error('Failed to reject');
-    customers.value = customers.value.filter(c => c.user_id !== user_id);
+    const data = await res.json().catch(() => ({}))
+    if (res.ok && (data.success === true || data.message)) {
+      customers.value = customers.value.filter(c => c.user_id !== user_id);
+      alert('Rejected successful');
+    } else {
+      alert(data.error || 'rejected successful customer');
+    }
   } catch (e) {
     alert('Failed to reject customer');
   }
@@ -138,4 +146,21 @@ function handleLogout() {
   window.location.href = '/';  
 }
 
+async function handleCloseShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' })
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success !== true) {
+      alert(data.error || 'Failed to close shop.')
+      return
+    }
+    router.push('/close-shop')
+  } catch {
+    alert('Error closing shop.')
+  }
+}
 </script>

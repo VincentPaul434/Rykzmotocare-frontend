@@ -10,7 +10,7 @@
           </span>
         </div>
         <nav class="space-y-2">
-          <a href="#" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
+          <a href="#" @click.prevent="handleCloseShop" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
           <router-link to="/customer-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Customer</router-link>
           <router-link to="/inventory-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Inventory</router-link>
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
@@ -60,6 +60,7 @@
             <tr class="border-b-2 border-black">
               <th class="text-left py-2 px-4 font-semibold">Mechanic Name:</th>
               <th class="text-left py-2 px-4 font-semibold">Specialty:</th>
+              <th class="text-left py-2 px-4 font-semibold">Experience (years):</th> <!-- Added -->
               <th class="text-left py-2 px-4 font-semibold">Status:</th>
               <th class="text-left py-2 px-4 font-semibold">Actions:</th>
             </tr>
@@ -73,6 +74,7 @@
             >
               <td class="py-2 px-4 font-semibold">{{ mechanic.name }}</td>
               <td class="py-2 px-4">{{ mechanic.specialization }}</td>
+              <td class="py-2 px-4">{{ mechanic.experience }}</td> <!-- Added -->
               <td class="py-2 px-4 font-semibold">
                 <span :class="(mechanic.status || '').includes('Available') ? 'text-black' : 'text-gray-600'">
                   {{ mechanic.status }}
@@ -90,9 +92,8 @@
                 >Remove</button>
               </td>
             </tr>
-
             <tr v-if="filteredMechanics.length === 0">
-              <td colspan="4" class="py-6 px-4 text-center text-gray-600">
+              <td colspan="5" class="py-6 px-4 text-center text-gray-600">
                 No mechanics found.
               </td>
             </tr>
@@ -109,7 +110,7 @@
         <h2 class="text-xl font-bold mb-4">Add Mechanic</h2>
         <form @submit.prevent="addMechanic">
           <input v-model="form.name" class="w-full mb-3 p-2 border rounded" placeholder="Name" required />
-          <input v-model="form.specialization" class="w-full mb-3 p-2 border rounded" placeholder="Specialty" required />
+          <input v-model="form.experience" type="number" min="0" class="w-full mb-3 p-2 border rounded" placeholder="Experience (years)" required /> <!-- Added -->
           <div class="flex gap-4 mb-3">
             <label class="flex items-center gap-1">
               <input type="radio" value="MWF" v-model="form.days_available" class="accent-black" required />
@@ -126,7 +127,7 @@
             <option value="Available">Available</option>
             <option value="Not Available">Not Available</option>
           </select>
-          <input v-model="form.availability" class="w-full mb-3 p-2 border rounded" placeholder="Specialization" required />
+          <input v-model="form.specialization" class="w-full mb-3 p-2 border rounded" placeholder="Specialization" required />
 
           <!-- Photo upload -->
           <label class="block font-semibold mb-1">Photo</label>
@@ -158,6 +159,9 @@
               <option value="Engine Overhaul">Engine Overhaul</option>
               <!-- Add more specialties as needed -->
             </select>
+          </label>
+          <label class="font-semibold">Experience (years)
+            <input v-model="form.experience" type="number" min="0" class="w-full border border-black rounded px-2 py-1 mt-1 bg-transparent" required /> <!-- Added -->
           </label>
           <label class="font-semibold">Availability</label>
           <div class="flex gap-4 mb-1">
@@ -215,10 +219,11 @@ const photoPreview = ref(null)
 const form = ref({
   name: '',
   specialization: '',
+  experience: '',
   days_available: '',
   time_available: '',
-  status: '',
-  availability: '' // keep if your DB expects it; otherwise remove from payload
+  status: ''
+  // availability: '' // <-- remove this if not needed
 })
 
 const filteredMechanics = computed(() => {
@@ -258,6 +263,7 @@ function resetForm() {
   form.value = {
     name: '',
     specialization: '',
+    experience: '', // Added
     days_available: '',
     time_available: '',
     status: '',
@@ -281,15 +287,16 @@ async function addMechanic() {
     const fd = new FormData()
     fd.append('name', form.value.name)
     fd.append('specialization', form.value.specialization)
+    fd.append('experience', form.value.experience) // Added
     fd.append('days_available', form.value.days_available)
     fd.append('time_available', form.value.time_available)
     fd.append('status', form.value.status)
     fd.append('availability', form.value.availability)
-    if (photoFile.value) fd.append('photo', photoFile.value) // field name: photo
+    if (photoFile.value) fd.append('photo', photoFile.value)
 
     const res = await fetch('http://localhost:5000/api/mechanics', {
       method: 'POST',
-      body: fd // no Content-Type header for FormData
+      body: fd
     })
     if (!res.ok) throw new Error('Add failed')
     showAddModal.value = false
@@ -305,6 +312,7 @@ function openEditModal(mechanic) {
   form.value = {
     name: mechanic.name || '',
     specialization: mechanic.specialization || '',
+    experience: mechanic.experience || '', // Added
     days_available: mechanic.days_available || '',
     time_available: mechanic.time_available || '',
     status: mechanic.status || '',
@@ -341,6 +349,24 @@ async function removeMechanic(id) {
   } catch (e) {
     alert('Failed to remove mechanic.')
     console.error(e)
+  }
+}
+
+async function handleCloseShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' })
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success !== true) {
+      alert(data.error || 'Failed to close shop.')
+      return
+    }
+    router.push('/close-shop')
+  } catch {
+    alert('Error closing shop.')
   }
 }
 

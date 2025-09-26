@@ -18,7 +18,15 @@
       </nav>
       <!-- Right Side: Search, Notifications, Cart, Profile -->
       <div class="flex items-center gap-3">
-        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+          <div class="flex items-center gap-3">
+            <input
+              class="rounded-full px-3 py-1 w-40"
+              type="text"
+              v-model="search"
+              placeholder="Search..."
+              style="background: #fff; color: #222; border: 1px solid #e5e7eb;" 
+            />
+          </div>
         <!-- Notification Bell Icon placed beside CartIcon -->
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,7 +46,7 @@
       <p class="text-xl text-center mb-8">Expert servicing to keep your bike in top shape.</p>
       <div class="flex flex-wrap justify-center gap-8">
         <div
-          v-for="service in services"
+          v-for="service in filteredServices"
           :key="service.title"
           class="bg-white border rounded shadow p-0 w-64 flex flex-col items-center cursor-pointer hover:shadow-lg transition"
           @click="selectService(service)"
@@ -125,12 +133,20 @@
         <ul>
           <li
             v-for="(notif, idx) in notifications"
-            :key="notif.id || idx"
-            class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+            :key="notif.notification_id"
+            class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition flex justify-between items-center"
           >
-            <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
-            <div class="text-sm text-gray-700">{{ notif.message }}</div>
-            <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+            <div>
+              <div class="font-semibold">{{ notif.type === 'billing' ? 'Billing' : 'Booking' }}</div>
+              <div class="text-sm text-gray-700">{{ notif.message }}</div>
+              <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+            </div>
+            <button
+              @click="markAsRead(notif.notification_id)"
+              class="ml-2 text-blue-600 underline text-xs"
+            >
+              Mark as read
+            </button>
           </li>
         </ul>
       </div>
@@ -188,7 +204,15 @@ const selectedMechanic = ref('') // not undefined
 const showNotifications = ref(false)
 const notifications = ref([])
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+const search = ref('')
 
+const filteredServices = computed(() =>
+  services.filter(service =>
+    !search.value ||
+    service.title.toLowerCase().includes(search.value.toLowerCase()) ||
+    service.desc.toLowerCase().includes(search.value.toLowerCase())
+  )
+)
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
@@ -197,15 +221,26 @@ function formatDate(dateStr) {
 }
 
 onMounted(async () => {
-  try {
-    const user_id = localStorage.getItem('user_id')
-    const res = await fetch(`${API}/api/notifications/${user_id}`)
-    if (res.ok) {
-      const data = await res.json()
-      notifications.value = Array.isArray(data.notifications) ? data.notifications : []
-    }
-  } catch {}
+  const user_id = localStorage.getItem('user_id')
+  const res = await fetch(`${API}/api/read/${user_id}/unread`)
+  if (res.ok) {
+    const data = await res.json()
+    notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+    notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }
 })
+
+async function markAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API}/api/read/${notificationId}/readone`, {
+      method: 'PATCH'
+    })
+    if (!res.ok) throw new Error('Failed to mark as read')
+    notifications.value = notifications.value.filter(n => n.notification_id !== notificationId)
+  } catch (e) {
+    // Optionally handle error
+  }
+}
 
 async function fetchMechanicAvailability() {            // updated
   mechanicLoading.value = true

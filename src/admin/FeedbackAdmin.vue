@@ -10,7 +10,7 @@
           </span>
         </div>
         <nav class="space-y-2">
-          <span class="block py-1 px-2 rounded hover:bg-gray-600 cursor-default">Close Shop</span>
+          <a href="#" @click.prevent="handleCloseShop" class="block py-1 px-2 rounded hover:bg-gray-600">Close Shop</a>
           <router-link to="/customer-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Customer</router-link>
           <router-link to="/inventory-admin" class="block py-1 px-2 rounded hover:bg-gray-600">Inventory</router-link>
           <router-link to="/booking-list" class="block py-1 px-2 rounded hover:bg-gray-600">Booking List</router-link>
@@ -70,7 +70,23 @@
                   <span class="font-bold text-yellow-600">{{ fb.rating }}</span> / 5
                 </td>
                 <td class="py-2 px-3">{{ fb.message }}</td>
-                <td class="py-2 px-3 text-green-700">{{ fb.admin_reply }}</td>
+                <td class="py-2 px-3 text-green-700">
+                  <div v-if="fb.admin_reply">{{ fb.admin_reply }}</div>
+                  <div v-else>
+                    <input
+                      v-model="replyInputs[fb.feedback_id]"
+                      type="text"
+                      placeholder="Type reply..."
+                      class="border rounded px-2 py-1 text-sm w-32"
+                    />
+                    <button
+                      class="ml-2 px-2 py-1 bg-yellow-400 text-black rounded text-xs font-bold"
+                      @click="sendReply(fb.feedback_id, fb.user_id)"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </td>
                 <td class="py-2 px-3 text-gray-500">{{ formatDate(fb.created_at) }}</td>
               </tr>
             </tbody>
@@ -92,6 +108,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 const feedbacks = ref([])
 const loading = ref(true)
 const error = ref('')
+const replyInputs = ref({})
 
 function formatDate(s) {
   if (!s) return ''
@@ -99,9 +116,51 @@ function formatDate(s) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+async function handleCloseShop() {
+  try {
+    const res = await fetch('http://localhost:5000/api/shop', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' })
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success !== true) {
+      alert(data.error || 'Failed to close shop.')
+      return
+    }
+    router.push('/close-shop')
+  } catch {
+    alert('Error closing shop.')
+  }
+}
+
+async function sendReply(feedback_id, user_id) {
+  const reply = replyInputs.value[feedback_id]
+  if (!reply) return alert('Reply cannot be empty.')
+  try {
+    const res = await fetch(`${API}/api/feedback/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback_id, user_id, reply })
+    })
+    const data = await res.json()
+    if (!res.ok || !data.success) {
+      alert(data.error || 'Failed to send reply.')
+      return
+    }
+    // Update the feedback row with the reply
+    const fb = feedbacks.value.find(f => f.feedback_id === feedback_id)
+    if (fb) fb.admin_reply = reply
+    replyInputs.value[feedback_id] = ''
+    alert('Reply sent!')
+  } catch {
+    alert('Error sending reply.')
+  }
+}
+
 onMounted(async () => {
   try {
-    const res = await fetch(`${API}/api/feedbacks`);
+    const res = await fetch(`${API}/api/feedback`);
     if (!res.ok) throw new Error('Failed to fetch feedbacks');
     feedbacks.value = await res.json();
   } catch (e) {

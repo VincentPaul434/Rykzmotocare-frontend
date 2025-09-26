@@ -12,6 +12,7 @@ const showLogoutModal = ref(false)
 const showNotifications = ref(false)
 const notifications = ref([])
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+const search = ref('')
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
@@ -25,10 +26,12 @@ onMounted(async () => {
   }
   try {
     const user_id = localStorage.getItem('user_id')
-    const res = await fetch(`${API}/api/notifications/${user_id}`)
+    const res = await fetch(`${API}/api/read/${user_id}/unread`)
     if (res.ok) {
       const data = await res.json()
       notifications.value = Array.isArray(data.notifications) ? data.notifications : []
+      // Sort by most recent first
+      notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     }
   } catch {}
 })
@@ -38,6 +41,19 @@ function handleLogout() {
   localStorage.removeItem('user_id')
   localStorage.removeItem('name')
   router.push('/')
+}
+
+async function markAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API}/api/read/${notificationId}/readone`, {
+      method: 'PATCH'
+    })
+    if (!res.ok) throw new Error('Failed to mark as read')
+    // Remove notification from the list after marking as read
+    notifications.value = notifications.value.filter(n => n.notification_id !== notificationId)
+  } catch (e) {
+    // Optionally handle error
+  }
 }
 </script>
 
@@ -64,7 +80,13 @@ function handleLogout() {
       </nav>
       <!-- Right Side: Search, Notifications, Cart, Profile -->
       <div class="flex items-center gap-3">
-        <input class="rounded-full px-3 py-1 text-black w-40" type="text" v-model="search" placeholder="Search..." />
+        <input
+          class="rounded-full px-3 py-1 w-40"
+          type="text"
+          v-model="search"
+          placeholder="Search..."
+          style="background: #fff; color: #222; border: 1px solid #e5e7eb;" 
+        />
         <!-- Notification Bell Icon placed beside CartIcon -->
         <button @click="showNotifications = !showNotifications" class="relative focus:outline-none">
           <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,12 +111,20 @@ function handleLogout() {
       <ul>
         <li
           v-for="(notif, idx) in notifications"
-          :key="notif.id || idx"
-          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition"
+          :key="notif.notification_id"
+          class="px-4 py-3 border-b last:border-b-0 hover:bg-yellow-50 transition flex justify-between items-center"
         >
-          <div class="font-semibold">{{ notif.title || 'Notification' }}</div>
-          <div class="text-sm text-gray-700">{{ notif.message }}</div>
-          <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          <div>
+            <div class="font-semibold">{{ notif.type === 'billing' ? 'Billing' : 'Booking' }}</div>
+            <div class="text-sm text-gray-700">{{ notif.message }}</div>
+            <div class="text-xs text-gray-400 mt-1">{{ formatDate(notif.created_at) }}</div>
+          </div>
+          <button
+            @click="markAsRead(notif.notification_id)"
+            class="ml-2 text-blue-600 underline text-xs"
+          >
+            Mark as read
+          </button>
         </li>
       </ul>
     </div>
@@ -201,7 +231,12 @@ function handleLogout() {
           At Rykzmotocare we make servicing your bike easy, so you are ready for your next ride.<br>
           Get easy access to service and maintenance information, request service online when it is convenient for you and trust that your Rykzmotocare has trained technicians to meet your needs.
         </p>
-        <button class="bg-yellow-400 text-black font-bold px-6 py-2 rounded mt-5">BOOK REPAIR SERVICE</button> 
+        <button
+          class="bg-yellow-400 text-black font-bold px-6 py-2 rounded mt-5"
+          @click="router.push('/services')"
+        >
+          BOOK REPAIR SERVICE
+        </button> 
       </div>
       <img class="w-80 mt-8 md:mt-0" src="https://i.ibb.co/6b7Q8Q8/bike.png" alt="Service Bike" />
     </section>
